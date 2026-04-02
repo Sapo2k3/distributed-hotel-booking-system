@@ -61,6 +61,48 @@ public class InMemoryBookingService implements BookingService {
 
     @Override
     public BookingResponse cancelBooking(final String requestId, final String bookingId, BookingRequest request) {
-        return null;
+        BookingResponse existingResponse = responsesByRequestId.get(requestId);
+        if (existingResponse != null){
+            return existingResponse;
+        }
+        Booking booking = bookingsById.get(bookingId);
+        BookingResponse response;
+        if(booking == null){
+            response = new BookingResponse(
+                    requestId,
+                    false,
+                    "Booing not found",
+                    null
+            );
+        } else {
+            Booking cancelledBooking = new Booking(
+                    booking.getId(),
+                    booking.getHotelId(),
+                    booking.getRoomId(),
+                    booking.getCustomerId(),
+                    booking.getCheckInDate(),
+                    booking.getCheckOutDate(),
+                    BookingStatus.CANCELLED
+            );
+            bookingsById.put(bookingId, cancelledBooking);
+            response = new BookingResponse(
+                    requestId,
+                    true,
+                    "Booking cancelled successfully",
+                    cancelledBooking
+            );
+        }
+        responsesByRequestId.put(requestId, response);;
+        return response;
+    }
+
+    @Override
+    public BookingResponse modifyBooking(String requestId, BookingRequest request) {
+        return new BookingResponse(
+                requestId,
+                false,
+                "Modify booking not implemented yet",
+                null
+        );
     }
 }
