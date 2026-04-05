@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class InMemoryBookingServiceTest {
 
     @Test
-    void shouldCreateBookingWhenRoomIsAvaiable() {
+    void shouldCreateBookingWhenRoomIsAvailable() {
         InMemoryBookingService bookingService = new InMemoryBookingService();
         BookingRequest request = new BookingRequest(
                 "request-1",
