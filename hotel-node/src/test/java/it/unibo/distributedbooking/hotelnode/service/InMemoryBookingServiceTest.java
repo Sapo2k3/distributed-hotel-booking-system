@@ -3,7 +3,7 @@ package it.unibo.distributedbooking.hotelnode.service;
 import it.unibo.distributedbooking.common.model.BookingRequest;
 import it.unibo.distributedbooking.common.model.BookingResponse;
 import it.unibo.distributedbooking.common.model.BookingStatus;
-import org.junit.jupiter.api.BeforeEach;
+import it.unibo.distributedbooking.common.model.BookingModificationRequest;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -75,5 +75,69 @@ public class InMemoryBookingServiceTest {
         assertNotNull(firstResponse.getBooking());
         assertNotNull(secondResponse.getBooking());
         assertEquals(firstResponse.getBooking().getId(), secondResponse.getBooking().getId());
+    }
+
+    @Test
+    void shouldModifyBookingWhenNewDatesDoNotConflict(){
+        InMemoryBookingService bookingService = new InMemoryBookingService();
+        BookingRequest createRequest = new BookingRequest(
+                "request-1",
+                "hotel-1",
+                "room-101",
+                "customer-1",
+                LocalDate.of(2026, 4, 10),
+                LocalDate.of(2026, 4, 12)
+        );
+        BookingResponse createResponse = bookingService.createBooking(createRequest);
+        BookingModificationRequest modificationRequest = new BookingModificationRequest(
+                "request-2",
+                createResponse.getBooking().getId(),
+                "hotel-1",
+                "room-101",
+                "customer-1",
+                LocalDate.of(2026, 4, 13),
+                LocalDate.of(2026, 4, 15)
+        );
+        BookingResponse modificationResponse = bookingService.modifyBooking(modificationRequest);
+        assertTrue(modificationResponse.isSuccess());
+        assertNotNull(modificationResponse.getBooking());
+        assertEquals(BookingStatus.MODIFIED, modificationResponse.getBooking().getStatus());
+        assertEquals(LocalDate.of(2026, 4, 13), modificationResponse.getBooking().getCheckInDate());
+        assertEquals(LocalDate.of(2026, 4, 15), modificationResponse.getBooking().getCheckOutDate());
+    }
+
+    @Test
+    void shouldRejectModificationWhenNewDatesConflictWithAnotherBooking(){
+        InMemoryBookingService bookingService = new InMemoryBookingService();
+        BookingRequest firstBookingRequest = new BookingRequest(
+                "request-1",
+                "hotel-1",
+                "room-101",
+                "customer-1",
+                LocalDate.of(2026, 4, 10),
+                LocalDate.of(2026, 4, 12)
+        );
+        BookingRequest secondBookingRequest = new BookingRequest(
+                "request2",
+                "hotel-1",
+                "room-102",
+                "customer-2",
+                LocalDate.of(2026, 4, 11),
+                LocalDate.of(2026, 4, 13)
+        );
+        BookingResponse firstBookingResponse = bookingService.createBooking(firstBookingRequest);
+        bookingService.createBooking(secondBookingRequest);
+        BookingModificationRequest modificationRequest = new BookingModificationRequest(
+                "request-3",
+                firstBookingResponse.getBooking().getId(),
+                "hotel-1",
+                "room-102",
+                "customer-1",
+                LocalDate.of(2026, 4, 11),
+                LocalDate.of(2026, 4, 13)
+        );
+        BookingResponse modificationResponse = bookingService.modifyBooking(modificationRequest);
+        assertFalse(modificationResponse.isSuccess());
+        assertNull(modificationResponse.getBooking());
     }
 }
