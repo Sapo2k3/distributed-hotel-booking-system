@@ -2,6 +2,8 @@ package it.unibo.distributedbooking.hotelnode.service;
 
 import it.unibo.distributedbooking.common.model.*;
 import it.unibo.distributedbooking.common.service.BookingService;
+import it.unibo.distributedbooking.hotelnode.repository.BookingRepository;
+import it.unibo.distributedbooking.hotelnode.repository.InMemoryBookingRepository;
 
 import java.util.Map;
 import java.util.UUID;
@@ -9,8 +11,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemoryBookingService implements BookingService {
 
-    private final Map<String, Booking> bookingsById = new ConcurrentHashMap<>();
+    private final BookingRepository bookingRepository;
     private final Map<String, BookingResponse> responsesByRequestId  = new ConcurrentHashMap<>();
+
+    public InMemoryBookingService() {
+        this.bookingRepository = new InMemoryBookingRepository();
+    }
+
+    public InMemoryBookingService(BookingRepository bookingRepository) {
+        this.bookingRepository = bookingRepository;
+    }
 
     @Override
     public BookingResponse createBooking(final BookingRequest request) {
@@ -18,7 +28,7 @@ public class InMemoryBookingService implements BookingService {
         if(existingResponse != null){
             return existingResponse;
         }
-        boolean roomAlreadyBooked = bookingsById.values().stream()
+        boolean roomAlreadyBooked = bookingRepository.findAll().stream()
                 .filter(booking -> booking.getRoomId().equals(request.getRoomId()))
                 .filter(booking -> booking.getHotelId().equals(request.getHotelId()))
                 .filter(booking -> booking.getStatus() == BookingStatus.CONFIRMED)
@@ -44,7 +54,7 @@ public class InMemoryBookingService implements BookingService {
                     request.getCheckOutDate(),
                     BookingStatus.CONFIRMED
             );
-            bookingsById.put(booking.getId(), booking);
+            bookingRepository.save(booking);
             response = new BookingResponse(
                     request.getRequestId(),
                     true,
@@ -62,16 +72,7 @@ public class InMemoryBookingService implements BookingService {
         if (existingResponse != null){
             return existingResponse;
         }
-        Booking booking = bookingsById.get(bookingId);
-        BookingResponse response;
-        if(booking == null){
-            response = new BookingResponse(
-                    requestId,
-                    false,
-                    "Booing not found",
-                    null
-            );
-        } else {
+        BookingResponse response = bookingRepository.findById(bookingId).map(booking -> {
             Booking cancelledBooking = new Booking(
                     booking.getId(),
                     booking.getHotelId(),
@@ -81,15 +82,21 @@ public class InMemoryBookingService implements BookingService {
                     booking.getCheckOutDate(),
                     BookingStatus.CANCELLED
             );
-            bookingsById.put(bookingId, cancelledBooking);
-            response = new BookingResponse(
+            bookingRepository.update(cancelledBooking);
+            return new BookingResponse(
                     requestId,
                     true,
                     "Booking cancelled successfully",
                     cancelledBooking
             );
-        }
-        responsesByRequestId.put(requestId, response);;
+        })
+                .orElseGet(() -> new BookingResponse(
+                        requestId,
+                        false,
+                        "Booking not found",
+                        null
+                ));
+        responsesByRequestId.put(requestId, response);
         return response;
     }
 
@@ -99,50 +106,56 @@ public class InMemoryBookingService implements BookingService {
         if(existingResponse != null){
             return existingResponse;
         }
-        Booking existingBooking = bookingsById.get(request.getBookingId());
-        BookingResponse response;
-        if (existingBooking == null){
-            response = new BookingResponse(
-                    request.getRequestId(),
-                    false,
-                    "Only confermed bookings can be modified",
-                    null
-            );
-        } else {
-            boolean roomAlreadyBooed = bookingsById.values().stream()
-                    .filter(booking -> !booking.getId().equals(request.getBookingId()))
-                    .filter(booking -> booking.getRoomId().equals(request.getRoomId()))
-                    .filter(booking -> booking.getHotelId().equals(request.getHotelId()))
-                    .filter(booking -> booking.getStatus() == BookingStatus.CONFIRMED)
-                    .anyMatch(booking -> request.getCheckInDate().isBefore(booking.getCheckOutDate())
-                            && request.getCheckOutDate().isAfter(booking.getCheckInDate())
-            );
-            if(roomAlreadyBooed){
-                response = new BookingResponse(
+        BookingResponse response = bookingRepository.findById(request.getBookingId())
+                .map(existingBooking -> {
+                    if (existingBooking.getStatus() != BookingStatus.CONFIRMED) {
+                        return new BookingResponse(
+                                request.getRequestId(),
+                                false,
+                                "Only confirmed bookings can be modified",
+                                null
+                        );
+                    }
+                    boolean roomAlreadyBooked = bookingRepository.findAll().stream()
+                            .filter(booking -> !booking.getId().equals(request.getBookingId()))
+                            .filter(booking -> booking.getRoomId().equals(request.getRoomId()))
+                            .filter(booking -> booking.getHotelId().equals(request.getHotelId()))
+                            .filter(booking -> booking.getStatus() == BookingStatus.CONFIRMED)
+                            .anyMatch(booking ->
+                                    request.getCheckInDate().isBefore(booking.getCheckOutDate()) &&
+                                            request.getCheckOutDate().isAfter(booking.getCheckInDate())
+                            );
+                    if (roomAlreadyBooked) {
+                        return new BookingResponse(
+                                request.getRequestId(),
+                                false,
+                                "Room is not available for the selected dates",
+                                null
+                        );
+                    }
+                    Booking modifiedBooking = new Booking(
+                            existingBooking.getId(),
+                            request.getHotelId(),
+                            request.getRoomId(),
+                            request.getCustomerId(),
+                            request.getCheckInDate(),
+                            request.getCheckOutDate(),
+                            BookingStatus.MODIFIED
+                    );
+                    bookingRepository.update(modifiedBooking);
+                    return new BookingResponse(
+                            request.getRequestId(),
+                            true,
+                            "Booking modified successfully",
+                            modifiedBooking
+                    );
+                })
+                .orElseGet(() -> new BookingResponse(
                         request.getRequestId(),
                         false,
-                        "Room is not avaiable for the selected dates",
+                        "Booking not found",
                         null
-                );
-            } else {
-                Booking modifiedBooking = new Booking(
-                        existingBooking.getId(),
-                        request.getHotelId(),
-                        request.getRoomId(),
-                        request.getCustomerId(),
-                        request.getCheckInDate(),
-                        request.getCheckOutDate(),
-                        BookingStatus.MODIFIED
-                );
-                bookingsById.put(existingBooking.getId(), modifiedBooking);
-                response = new BookingResponse(
-                        request.getRequestId(),
-                        true,
-                        "Booking modified successfully",
-                        modifiedBooking
-                );
-            }
-        }
+                ));
         responsesByRequestId.put(request.getRequestId(), response);
         return response;
     }
