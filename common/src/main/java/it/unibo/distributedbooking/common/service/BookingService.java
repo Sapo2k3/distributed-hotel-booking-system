@@ -1,5 +1,6 @@
 package it.unibo.distributedbooking.common.service;
 
+import it.unibo.distributedbooking.common.model.BookingModificationRequest;
 import it.unibo.distributedbooking.common.model.BookingRequest;
 import it.unibo.distributedbooking.common.model.BookingResponse;
 
@@ -9,5 +10,5 @@ public interface BookingService {
 
     BookingResponse cancelBooking(final String requestId, final String bookingId, BookingRequest request);
 
-    BookingResponse modifyBooking(final String requestId, final BookingRequest request);
+    BookingResponse modifyBooking(BookingModificationRequest request);
 }

@@ -1,9 +1,6 @@
 package it.unibo.distributedbooking.hotelnode.service;
 
-import it.unibo.distributedbooking.common.model.Booking;
-import it.unibo.distributedbooking.common.model.BookingRequest;
-import it.unibo.distributedbooking.common.model.BookingResponse;
-import it.unibo.distributedbooking.common.model.BookingStatus;
+import it.unibo.distributedbooking.common.model.*;
 import it.unibo.distributedbooking.common.service.BookingService;
 
 import java.util.Map;
@@ -97,12 +94,56 @@ public class InMemoryBookingService implements BookingService {
     }
 
     @Override
-    public BookingResponse modifyBooking(String requestId, BookingRequest request) {
-        return new BookingResponse(
-                requestId,
-                false,
-                "Modify booking not implemented yet",
-                null
-        );
+    public BookingResponse modifyBooking(final BookingModificationRequest request) {
+        BookingResponse existingResponse = responsesByRequestId.get(request.getRequestId());
+        if(existingResponse != null){
+            return existingResponse;
+        }
+        Booking existingBooking = bookingsById.get(request.getBookingId());
+        BookingResponse response;
+        if (existingBooking == null){
+            response = new BookingResponse(
+                    request.getRequestId(),
+                    false,
+                    "Only confermed bookings can be modified",
+                    null
+            );
+        } else {
+            boolean roomAlreadyBooed = bookingsById.values().stream()
+                    .filter(booking -> !booking.getId().equals(request.getBookingId()))
+                    .filter(booking -> booking.getRoomId().equals(request.getRoomId()))
+                    .filter(booking -> booking.getHotelId().equals(request.getHotelId()))
+                    .filter(booking -> booking.getStatus() == BookingStatus.CONFIRMED)
+                    .anyMatch(booking -> request.getCheckInDate().isBefore(booking.getCheckOutDate())
+                            && request.getCheckOutDate().isAfter(booking.getCheckInDate())
+            );
+            if(roomAlreadyBooed){
+                response = new BookingResponse(
+                        request.getRequestId(),
+                        false,
+                        "Room is not avaiable for the selected dates",
+                        null
+                );
+            } else {
+                Booking modifiedBooking = new Booking(
+                        existingBooking.getId(),
+                        request.getHotelId(),
+                        request.getRoomId(),
+                        request.getCustomerId(),
+                        request.getCheckInDate(),
+                        request.getCheckOutDate(),
+                        BookingStatus.MODIFIED
+                );
+                bookingsById.put(existingBooking.getId(), modifiedBooking);
+                response = new BookingResponse(
+                        request.getRequestId(),
+                        true,
+                        "Booking modified successfully",
+                        modifiedBooking
+                );
+            }
+        }
+        responsesByRequestId.put(request.getRequestId(), response);
+        return response;
     }
 }
