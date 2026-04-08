@@ -1,4 +1,4 @@
-package it.unibo.distributedbooing.coordinator.service;
+package it.unibo.distributedbooking.coordinator.service;
 
 import it.unibo.distributedbooking.coordinator.model.HotelNodeInfo;
 import it.unibo.distributedbooking.coordinator.service.HotelRegistryService;
