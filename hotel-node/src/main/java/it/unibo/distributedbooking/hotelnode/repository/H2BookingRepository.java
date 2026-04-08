@@ -17,8 +17,9 @@ public class H2BookingRepository implements BookingRepository {
 
     private final String jdbcUrl;
 
-    public H2BookingRepository(final String jdbcUrl){
+    public H2BookingRepository(final String jdbcUrl) throws SQLException {
         this.jdbcUrl = jdbcUrl;
+        initializeSchema();
     }
 
     private Connection getConnection() throws SQLException {
@@ -71,7 +72,7 @@ public class H2BookingRepository implements BookingRepository {
     public void save(Booking booking) {
         String sql = """
                 INSERT INTO bookings (id, hotel_id, room_id, customer_id, check_in_date, check_out_date, status)
-                VALUE (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """;
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
