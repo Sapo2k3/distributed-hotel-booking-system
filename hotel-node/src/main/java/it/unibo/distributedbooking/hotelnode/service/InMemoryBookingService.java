@@ -67,36 +67,41 @@ public class InMemoryBookingService implements BookingService {
     }
 
     @Override
-    public BookingResponse cancelBooking(final String requestId, final String bookingId, BookingRequest request) {
-        BookingResponse existingResponse = responsesByRequestId.get(requestId);
-        if (existingResponse != null){
+    public BookingResponse cancelBooking(final BookingCancellationRequest request) {
+        BookingResponse existingResponse = responsesByRequestId.get(request.getRequestId());
+        if (existingResponse != null) {
             return existingResponse;
         }
-        BookingResponse response = bookingRepository.findById(bookingId).map(booking -> {
-            Booking cancelledBooking = new Booking(
-                    booking.getId(),
-                    booking.getHotelId(),
-                    booking.getRoomId(),
-                    booking.getCustomerId(),
-                    booking.getCheckInDate(),
-                    booking.getCheckOutDate(),
-                    BookingStatus.CANCELLED
-            );
-            bookingRepository.update(cancelledBooking);
-            return new BookingResponse(
-                    requestId,
-                    true,
-                    "Booking cancelled successfully",
-                    cancelledBooking
-            );
-        })
+
+        BookingResponse response = bookingRepository.findById(request.getBookingId())
+                .map(booking -> {
+                    Booking cancelledBooking = new Booking(
+                            booking.getId(),
+                            booking.getHotelId(),
+                            booking.getRoomId(),
+                            booking.getCustomerId(),
+                            booking.getCheckInDate(),
+                            booking.getCheckOutDate(),
+                            BookingStatus.CANCELLED
+                    );
+
+                    bookingRepository.update(cancelledBooking);
+
+                    return new BookingResponse(
+                            request.getRequestId(),
+                            true,
+                            "Booking cancelled successfully",
+                            cancelledBooking
+                    );
+                })
                 .orElseGet(() -> new BookingResponse(
-                        requestId,
+                        request.getRequestId(),
                         false,
                         "Booking not found",
                         null
                 ));
-        responsesByRequestId.put(requestId, response);
+
+        responsesByRequestId.put(request.getRequestId(), response);
         return response;
     }
 

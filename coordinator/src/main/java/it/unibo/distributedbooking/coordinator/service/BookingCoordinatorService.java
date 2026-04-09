@@ -1,5 +1,6 @@
 package it.unibo.distributedbooking.coordinator.service;
 
+import it.unibo.distributedbooking.common.model.BookingCancellationRequest;
 import it.unibo.distributedbooking.common.model.BookingModificationRequest;
 import it.unibo.distributedbooking.common.model.BookingRequest;
 import it.unibo.distributedbooking.common.model.BookingResponse;
@@ -53,7 +54,7 @@ public class BookingCoordinatorService {
             }
 
             @Override
-            public BookingResponse cancelBooking(final String requestId, final String bookingId, final BookingRequest request) {
+            public BookingResponse cancelBooking(final BookingCancellationRequest request) {
                 return null;
             }
 
