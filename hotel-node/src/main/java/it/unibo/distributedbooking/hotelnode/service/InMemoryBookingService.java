@@ -68,12 +68,12 @@ public class InMemoryBookingService implements BookingService {
 
     @Override
     public BookingResponse cancelBooking(final BookingCancellationRequest request) {
-        BookingResponse existingResponse = responsesByRequestId.get(request.getRequestId());
+        BookingResponse existingResponse = responsesByRequestId.get(request.requestId());
         if (existingResponse != null) {
             return existingResponse;
         }
 
-        BookingResponse response = bookingRepository.findById(request.getBookingId())
+        BookingResponse response = bookingRepository.findById(request.bookingId())
                 .map(booking -> {
                     Booking cancelledBooking = new Booking(
                             booking.getId(),
@@ -88,20 +88,20 @@ public class InMemoryBookingService implements BookingService {
                     bookingRepository.update(cancelledBooking);
 
                     return new BookingResponse(
-                            request.getRequestId(),
+                            request.requestId(),
                             true,
                             "Booking cancelled successfully",
                             cancelledBooking
                     );
                 })
                 .orElseGet(() -> new BookingResponse(
-                        request.getRequestId(),
+                        request.bookingId(),
                         false,
                         "Booking not found",
                         null
                 ));
 
-        responsesByRequestId.put(request.getRequestId(), response);
+        responsesByRequestId.put(request.requestId(), response);
         return response;
     }
 
