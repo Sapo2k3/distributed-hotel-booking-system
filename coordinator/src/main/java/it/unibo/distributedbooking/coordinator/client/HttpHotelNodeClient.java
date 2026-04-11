@@ -17,6 +17,10 @@ public class HttpHotelNodeClient implements HotelNodeClient {
 
     private final HttpClient httpClient;
 
+    public HttpHotelNodeClient() {
+        this(HttpClient.newHttpClient());
+    }
+
     public HttpHotelNodeClient(final HttpClient httpClient) {
         this.httpClient = httpClient;
     }
@@ -61,7 +65,7 @@ public class HttpHotelNodeClient implements HotelNodeClient {
         return executePost(
                 baseUrl + "/bookings",
                 request,
-                request.getRequestId()
+                request.requestId()
         );
     }
 

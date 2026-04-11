@@ -47,13 +47,13 @@ public class H2BookingRepository implements BookingRepository {
     }
 
     private void fillStatement(PreparedStatement statement, Booking booking) throws SQLException {
-        statement.setString(1, booking.getId());
-        statement.setString(2, booking.getHotelId());
-        statement.setString(3, booking.getRoomId());
-        statement.setString(4, booking.getCustomerId());
-        statement.setObject(5, booking.getCheckInDate());
-        statement.setObject(6, booking.getCheckOutDate());
-        statement.setString(7, booking.getStatus().name());
+        statement.setString(1, booking.bookingId());
+        statement.setString(2, booking.hotelId());
+        statement.setString(3, booking.roomId());
+        statement.setString(4, booking.customerId());
+        statement.setObject(5, booking.checkInDate());
+        statement.setObject(6, booking.checkOutDate());
+        statement.setString(7, booking.status().name());
     }
 
     private Booking mapRow(ResultSet resultSet) throws SQLException {
@@ -126,13 +126,13 @@ public class H2BookingRepository implements BookingRepository {
                 """;
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, booking.getHotelId());
-            statement.setString(2, booking.getRoomId());
-            statement.setString(3, booking.getCustomerId());
-            statement.setObject(4, booking.getCheckInDate());
-            statement.setObject(5, booking.getCheckOutDate());
-            statement.setString(6, booking.getStatus().name());
-            statement.setString(7, booking.getId());
+            statement.setString(1, booking.hotelId());
+            statement.setString(2, booking.roomId());
+            statement.setString(3, booking.customerId());
+            statement.setObject(4, booking.checkInDate());
+            statement.setObject(5, booking.checkOutDate());
+            statement.setString(6, booking.status().name());
+            statement.setString(7, booking.bookingId());
             statement.executeUpdate();
         } catch (SQLException e) {
             throw new IllegalStateException("Unable to update booking", e);

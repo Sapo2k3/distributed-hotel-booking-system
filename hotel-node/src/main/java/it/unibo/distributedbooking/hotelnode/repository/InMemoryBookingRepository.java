@@ -14,7 +14,7 @@ public class InMemoryBookingRepository implements BookingRepository {
 
     @Override
     public void save(final Booking booking) {
-        bookingsById.put(booking.getId(), booking);
+        bookingsById.put(booking.bookingId(), booking);
     }
 
     @Override
@@ -29,6 +29,6 @@ public class InMemoryBookingRepository implements BookingRepository {
 
     @Override
     public void update(final Booking booking) {
-        bookingsById.put(booking.getId(), booking);
+        bookingsById.put(booking.bookingId(), booking);
     }
 }

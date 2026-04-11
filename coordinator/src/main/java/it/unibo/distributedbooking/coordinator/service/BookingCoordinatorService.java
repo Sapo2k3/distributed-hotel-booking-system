@@ -4,7 +4,8 @@ import it.unibo.distributedbooking.common.model.BookingCancellationRequest;
 import it.unibo.distributedbooking.common.model.BookingModificationRequest;
 import it.unibo.distributedbooking.common.model.BookingRequest;
 import it.unibo.distributedbooking.common.model.BookingResponse;
-import it.unibo.distributedbooking.common.service.BookingService;
+import it.unibo.distributedbooking.coordinator.client.HotelNodeClient;
+import it.unibo.distributedbooking.coordinator.client.HttpHotelNodeClient;
 import it.unibo.distributedbooking.coordinator.model.HotelNodeInfo;
 
 import java.util.Optional;
@@ -12,56 +13,33 @@ import java.util.Optional;
 public class BookingCoordinatorService {
 
     private final HotelRegistryService hotelRegistryService;
+    private final HotelNodeClient hotelNodeClient;
 
     public BookingCoordinatorService(final HotelRegistryService hotelRegistryService) {
         this.hotelRegistryService = hotelRegistryService;
+        this.hotelNodeClient = new HttpHotelNodeClient();
     }
-
     public BookingResponse coordinateBooking(BookingRequest request) {
-        Optional<HotelNodeInfo> hotelNode = hotelRegistryService.findHotelById(request.getHotelId());
-        if(hotelNode.isEmpty()) {
+        Optional<HotelNodeInfo> hotelNode = hotelRegistryService.findHotelById(request.hotelId());
+        if (hotelNode.isEmpty()) {
             return new BookingResponse(
-                    request.getRequestId(),
+                    request.requestId(),
                     false,
-                    "Hotel node not found: " + request.getHotelId(),
+                    "Hotel node not found: " + request.hotelId(),
                     null
             );
         }
-        // TODO: implementare chiamata remota al nodo hotel
-        // Per ora si restituisce un placeholder che simula il flusso
+        String baseUrl = "http://" + hotelNode.get().getHost() + ":" + hotelNode.get().getPort();
+        if (!hotelNodeClient.isHealthy(baseUrl)) {
+            return new BookingResponse(
+                    request.requestId(),
+                    false,
+                    "Hotel node " + hotelNode.get().getHotelId() + " is not healthy",
+                    null
+            );
+        }
         System.out.println("Routing booking to " + hotelNode.get().getHotelId() +
-                " at " + hotelNode.get().getHost() + ":" + hotelNode.get().getPort());
-
-        // Simulazione: in futuro qui chiameremo il BookingService del nodo hotel
-        BookingService hotelBookingService = simulateHotelBookingService(hotelNode.get());
-        return hotelBookingService.createBooking(request);
-    }
-
-    // Placeholder per la logica futura di invio richiesta al nodo hotel
-    private BookingService simulateHotelBookingService(HotelNodeInfo hotelNode) {
-        // TODO: implementare stub/proxy per chiamare il nodo hotel
-        // Per ora restituisce sempre successo per verificare il flusso di routing
-        return new BookingService() {
-
-            @Override
-            public BookingResponse createBooking(final BookingRequest request) {
-                return new BookingResponse(
-                        request.getRequestId(),
-                        true,
-                        "Booking accepted by " + hotelNode.getHotelId(),
-                        null
-                );
-            }
-
-            @Override
-            public BookingResponse cancelBooking(final BookingCancellationRequest request) {
-                return null;
-            }
-
-            @Override
-            public BookingResponse modifyBooking(final BookingModificationRequest request) {
-                return null;
-            }
-        };
+                " at " + baseUrl);
+        return hotelNodeClient.createBooking(baseUrl, request);
     }
 }

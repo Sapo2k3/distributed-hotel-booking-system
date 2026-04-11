@@ -28,7 +28,7 @@ public class CoordinatorApplication {
         );
 
         var response = coordinator.coordinateBooking(request);
-        System.out.println("Coordinator response: " + response.isSuccess() + " - " + response.getMessage());
+        System.out.println("Coordinator response: " + response.success() + " - " + response.message());
 
     }
 }

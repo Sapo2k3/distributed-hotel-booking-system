@@ -24,22 +24,22 @@ public class InMemoryBookingService implements BookingService {
 
     @Override
     public BookingResponse createBooking(final BookingRequest request) {
-        BookingResponse existingResponse = responsesByRequestId.get(request.getRequestId());
+        BookingResponse existingResponse = responsesByRequestId.get(request.requestId());
         if(existingResponse != null){
             return existingResponse;
         }
         boolean roomAlreadyBooked = bookingRepository.findAll().stream()
-                .filter(booking -> booking.getRoomId().equals(request.getRoomId()))
-                .filter(booking -> booking.getHotelId().equals(request.getHotelId()))
-                .filter(booking -> booking.getStatus() == BookingStatus.CONFIRMED)
+                .filter(booking -> booking.roomId().equals(request.roomId()))
+                .filter(booking -> booking.hotelId().equals(request.hotelId()))
+                .filter(booking -> booking.status() == BookingStatus.CONFIRMED)
                 .anyMatch(booking ->
-                        request.getCheckInDate().isBefore(booking.getCheckOutDate()) &&
-                                request.getCheckOutDate().isAfter(booking.getCheckInDate())
+                        request.checkInDate().isBefore(booking.checkOutDate()) &&
+                                request.checkOutDate().isAfter(booking.checkInDate())
                 );
         BookingResponse response;
         if(roomAlreadyBooked) {
             response = new BookingResponse(
-                    request.getRequestId(),
+                    request.requestId(),
                     false,
                     "Room is not avaiable for the selected dates",
                     null
@@ -47,22 +47,22 @@ public class InMemoryBookingService implements BookingService {
         } else {
             Booking booking = new Booking(
                     UUID.randomUUID().toString(),
-                    request.getHotelId(),
-                    request.getRoomId(),
-                    request.getCustomerId(),
-                    request.getCheckInDate(),
-                    request.getCheckOutDate(),
+                    request.hotelId(),
+                    request.roomId(),
+                    request.customerId(),
+                    request.checkInDate(),
+                    request.checkOutDate(),
                     BookingStatus.CONFIRMED
             );
             bookingRepository.save(booking);
             response = new BookingResponse(
-                    request.getRequestId(),
+                    request.requestId(),
                     true,
                     "Booking created successfully",
                     booking
             );
         }
-        responsesByRequestId.put(request.getRequestId(), response);
+        responsesByRequestId.put(request.requestId(), response);
         return response;
     }
 
@@ -76,12 +76,12 @@ public class InMemoryBookingService implements BookingService {
         BookingResponse response = bookingRepository.findById(request.bookingId())
                 .map(booking -> {
                     Booking cancelledBooking = new Booking(
-                            booking.getId(),
-                            booking.getHotelId(),
-                            booking.getRoomId(),
-                            booking.getCustomerId(),
-                            booking.getCheckInDate(),
-                            booking.getCheckOutDate(),
+                            booking.bookingId(),
+                            booking.hotelId(),
+                            booking.roomId(),
+                            booking.customerId(),
+                            booking.checkInDate(),
+                            booking.checkOutDate(),
                             BookingStatus.CANCELLED
                     );
 
@@ -113,7 +113,7 @@ public class InMemoryBookingService implements BookingService {
         }
         BookingResponse response = bookingRepository.findById(request.getBookingId())
                 .map(existingBooking -> {
-                    if (existingBooking.getStatus() != BookingStatus.CONFIRMED) {
+                    if (existingBooking.status() != BookingStatus.CONFIRMED) {
                         return new BookingResponse(
                                 request.getRequestId(),
                                 false,
@@ -122,13 +122,13 @@ public class InMemoryBookingService implements BookingService {
                         );
                     }
                     boolean roomAlreadyBooked = bookingRepository.findAll().stream()
-                            .filter(booking -> !booking.getId().equals(request.getBookingId()))
-                            .filter(booking -> booking.getRoomId().equals(request.getRoomId()))
-                            .filter(booking -> booking.getHotelId().equals(request.getHotelId()))
-                            .filter(booking -> booking.getStatus() == BookingStatus.CONFIRMED)
+                            .filter(booking -> !booking.bookingId().equals(request.getBookingId()))
+                            .filter(booking -> booking.roomId().equals(request.getRoomId()))
+                            .filter(booking -> booking.hotelId().equals(request.getHotelId()))
+                            .filter(booking -> booking.status() == BookingStatus.CONFIRMED)
                             .anyMatch(booking ->
-                                    request.getCheckInDate().isBefore(booking.getCheckOutDate()) &&
-                                            request.getCheckOutDate().isAfter(booking.getCheckInDate())
+                                    request.getCheckInDate().isBefore(booking.checkOutDate()) &&
+                                            request.getCheckOutDate().isAfter(booking.checkInDate())
                             );
                     if (roomAlreadyBooked) {
                         return new BookingResponse(
@@ -139,7 +139,7 @@ public class InMemoryBookingService implements BookingService {
                         );
                     }
                     Booking modifiedBooking = new Booking(
-                            existingBooking.getId(),
+                            existingBooking.bookingId(),
                             request.getHotelId(),
                             request.getRoomId(),
                             request.getCustomerId(),
