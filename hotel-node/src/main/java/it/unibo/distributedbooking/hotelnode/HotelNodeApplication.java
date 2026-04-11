@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpServer;
 import it.unibo.distributedbooking.hotelnode.api.BookingHttpHandler;
 import it.unibo.distributedbooking.hotelnode.api.CancelHttpHandler;
 import it.unibo.distributedbooking.hotelnode.api.HealthHttpHandler;
+import it.unibo.distributedbooking.hotelnode.api.ModifyHttpHandler;
 import it.unibo.distributedbooking.hotelnode.repository.BookingRepository;
 import it.unibo.distributedbooking.hotelnode.repository.H2BookingRepository;
 import it.unibo.distributedbooking.common.service.BookingService;
@@ -29,6 +30,7 @@ public class HotelNodeApplication {
 
             server.createContext("/bookings", new BookingHttpHandler(service));
             server.createContext("/bookings/cancel", new CancelHttpHandler(service));
+            server.createContext("/bookings/modify", new ModifyHttpHandler(service));
             server.createContext("/health", new HealthHttpHandler(HOTEL_ID));
 
             server.setExecutor(Executors.newFixedThreadPool(10));
@@ -39,6 +41,7 @@ public class HotelNodeApplication {
             System.out.println("Endpoints:");
             System.out.println("  POST http://localhost:" + PORT + "/bookings");
             System.out.println("  POST http://localhost:" + PORT + "/bookings/cancel");
+            System.out.println("  POST http://localhost:" + PORT + "/bookings/modify");
             System.out.println("  GET  http://localhost:" + PORT + "/health");
 
         } catch (SQLException | IOException e) {
