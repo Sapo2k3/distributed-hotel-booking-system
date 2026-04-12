@@ -37,6 +37,18 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.27.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>it.unibo.distributedbooking</groupId>
             <artifactId>hotel-node</artifactId>
             <version>0.0.1-SNAPSHOT</version>

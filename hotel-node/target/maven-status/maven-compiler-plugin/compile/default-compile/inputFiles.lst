@@ -1,1 +1,10 @@
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/main/java/it/unibo/distributedbooking/hotelnode/HotelNodeApplication.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/main/java/it/unibo/distributedbooking/hotelnode/api/BookingHttpHandler.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/main/java/it/unibo/distributedbooking/hotelnode/api/CancelHttpHandler.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/main/java/it/unibo/distributedbooking/hotelnode/api/HealthHttpHandler.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/main/java/it/unibo/distributedbooking/hotelnode/api/ModifyHttpHandler.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/main/java/it/unibo/distributedbooking/hotelnode/repository/BookingRepository.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/main/java/it/unibo/distributedbooking/hotelnode/repository/H2BookingRepository.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/main/java/it/unibo/distributedbooking/hotelnode/repository/InMemoryBookingRepository.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/main/java/it/unibo/distributedbooking/hotelnode/service/InMemoryBookingService.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/main/java/it/unibo/distributedbooking/hotelnode/util/JsonUtil.java

@@ -1,0 +1,7 @@
+it/unibo/distributedbooking/coordinator/model/HotelNodeInfo.class
+it/unibo/distributedbooking/coordinator/service/InMemoryHotelRegistryService.class
+it/unibo/distributedbooking/coordinator/client/HotelNodeClient.class
+it/unibo/distributedbooking/coordinator/client/HttpHotelNodeClient.class
+it/unibo/distributedbooking/coordinator/CoordinatorApplication.class
+it/unibo/distributedbooking/coordinator/service/BookingCoordinatorService.class
+it/unibo/distributedbooking/coordinator/service/HotelRegistryService.class

@@ -1,7 +1,6 @@
 package it.unibo.distributedbooking.coordinator.service;
 
 import it.unibo.distributedbooking.common.model.BookingCancellationRequest;
-import it.unibo.distributedbooking.common.model.BookingModificationRequest;
 import it.unibo.distributedbooking.common.model.BookingRequest;
 import it.unibo.distributedbooking.common.model.BookingResponse;
 import it.unibo.distributedbooking.coordinator.client.HotelNodeClient;
@@ -19,6 +18,12 @@ public class BookingCoordinatorService {
         this.hotelRegistryService = hotelRegistryService;
         this.hotelNodeClient = new HttpHotelNodeClient();
     }
+
+    public BookingCoordinatorService(final HotelRegistryService hotelRegistryService, final HotelNodeClient hotelNodeClient) {
+        this.hotelRegistryService = hotelRegistryService;
+        this.hotelNodeClient = hotelNodeClient;
+    }
+
     public BookingResponse coordinateBooking(BookingRequest request) {
         Optional<HotelNodeInfo> hotelNode = hotelRegistryService.findHotelById(request.hotelId());
         if (hotelNode.isEmpty()) {
