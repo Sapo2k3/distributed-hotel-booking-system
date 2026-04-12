@@ -25,11 +25,14 @@ class BookingCoordinatorServiceTest {
     @Mock
     private HotelNodeClient hotelNodeClient;
 
+    @Mock
+    private BookingLocatorService locatorService;
+
     private BookingCoordinatorService coordinatorService;
 
     @BeforeEach
     void setUp() {
-        coordinatorService = new BookingCoordinatorService(hotelRegistryService, hotelNodeClient);
+        coordinatorService = new BookingCoordinatorService(hotelRegistryService, hotelNodeClient, locatorService);
     }
 
     @Test

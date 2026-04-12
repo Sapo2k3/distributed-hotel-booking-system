@@ -12,7 +12,13 @@ public class InMemoryBookingLocatorService implements BookingLocatorService {
 
     private final Map<String, Booking> bookingsById = new HashMap<>();
 
-    public void registerBooking(String bookingId, String hotelId, String roomId, String customerId, LocalDate checkInDate, LocalDate checkOutDate) {
+    @Override
+    public void registerBooking(final String bookingId,
+                                final String hotelId,
+                                final String roomId,
+                                final String customerId,
+                                final LocalDate checkInDate,
+                                final LocalDate checkOutDate) {
         bookingsById.put(bookingId, new Booking(
                 bookingId,
                 hotelId,
