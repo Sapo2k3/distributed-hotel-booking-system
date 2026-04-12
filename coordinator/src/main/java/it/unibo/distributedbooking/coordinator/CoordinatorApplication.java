@@ -1,9 +1,13 @@
 package it.unibo.distributedbooking.coordinator;
 
 import it.unibo.distributedbooking.common.model.BookingRequest;
+import it.unibo.distributedbooking.coordinator.client.HotelNodeClient;
+import it.unibo.distributedbooking.coordinator.client.HttpHotelNodeClient;
+import it.unibo.distributedbooking.coordinator.heartbeat.HeartbeatService;
 import it.unibo.distributedbooking.coordinator.model.HotelNodeInfo;
-import it.unibo.distributedbooking.coordinator.service.HotelRegistryService;
 import it.unibo.distributedbooking.coordinator.service.BookingCoordinatorService;
+import it.unibo.distributedbooking.coordinator.service.HotelRegistryService;
+import it.unibo.distributedbooking.coordinator.service.InMemoryBookingLocatorService;
 import it.unibo.distributedbooking.coordinator.service.InMemoryHotelRegistryService;
 
 import java.time.LocalDate;
@@ -12,11 +16,24 @@ public class CoordinatorApplication {
 
     public static void main(String[] args) {
         HotelRegistryService registryService = new InMemoryHotelRegistryService();
+        InMemoryBookingLocatorService bookingLocatorService = new InMemoryBookingLocatorService();
+        HotelNodeClient hotelNodeClient = new HttpHotelNodeClient();
 
         registryService.registerHotel(new HotelNodeInfo("hotel-1", "localhost", 8081));
         registryService.registerHotel(new HotelNodeInfo("hotel-2", "localhost", 8082));
 
-        BookingCoordinatorService coordinator = new BookingCoordinatorService(registryService);
+        BookingCoordinatorService coordinator = new BookingCoordinatorService(
+                registryService,
+                hotelNodeClient,
+                bookingLocatorService
+        );
+
+        HeartbeatService heartbeatService = new HeartbeatService(
+                registryService,
+                hotelNodeClient
+        );
+
+        heartbeatService.start();
 
         BookingRequest request = new BookingRequest(
                 "req-demo-1",
@@ -30,5 +47,6 @@ public class CoordinatorApplication {
         var response = coordinator.coordinateBooking(request);
         System.out.println("Coordinator response: " + response.success() + " - " + response.message());
 
+        Runtime.getRuntime().addShutdownHook(new Thread(heartbeatService::stop));
     }
 }
