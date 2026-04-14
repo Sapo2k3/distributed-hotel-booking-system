@@ -19,8 +19,8 @@ public class CoordinatorApplication {
         InMemoryBookingLocatorService bookingLocatorService = new InMemoryBookingLocatorService();
         HotelNodeClient hotelNodeClient = new HttpHotelNodeClient();
 
-        registryService.registerHotel(new HotelNodeInfo("hotel-1", "localhost", 8081));
-        registryService.registerHotel(new HotelNodeInfo("hotel-2", "localhost", 8082));
+        registryService.registerHotel(new HotelNodeInfo("hotel-1", "hotel-node-1", 8081));
+        registryService.registerHotel(new HotelNodeInfo("hotel-2", "hotel-node-2", 8082));
 
         BookingCoordinatorService coordinator = new BookingCoordinatorService(
                 registryService,
