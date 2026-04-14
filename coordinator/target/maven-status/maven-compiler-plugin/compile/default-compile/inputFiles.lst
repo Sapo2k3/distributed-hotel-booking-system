@@ -1,7 +1,10 @@
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/CoordinatorApplication.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/client/HotelNodeClient.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/client/HttpHotelNodeClient.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/heartbeat/HeartbeatService.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/model/HotelNodeInfo.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/BookingCoordinatorService.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/BookingLocatorService.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/HotelRegistryService.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/InMemoryBookingLocatorService.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/InMemoryHotelRegistryService.java

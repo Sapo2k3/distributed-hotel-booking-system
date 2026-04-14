@@ -24,10 +24,10 @@ public class InMemoryBookingServiceTest {
                 LocalDate.of(2026, 4, 12)
         );
         BookingResponse response = bookingService.createBooking(request);
-        assertTrue(response.isSuccess());
-        assertNotNull(response.getBooking());
-        assertEquals("request-1", response.getRequestId());
-        assertEquals(BookingStatus.CONFIRMED, response.getBooking().getStatus());
+        assertTrue(response.success());
+        assertNotNull(response.booking());
+        assertEquals("request-1", response.requestId());
+        assertEquals(BookingStatus.CONFIRMED, response.booking().status());
     }
 
     @Test
@@ -51,9 +51,9 @@ public class InMemoryBookingServiceTest {
         );
         BookingResponse firstResponse = bookingService.createBooking(firstRequest);
         BookingResponse secondResponse = bookingService.createBooking(secondRequest);;
-        assertTrue(firstResponse.isSuccess());
-        assertFalse(secondResponse.isSuccess());
-        assertNull(secondResponse.getBooking());
+        assertTrue(firstResponse.success());
+        assertFalse(secondResponse.success());
+        assertNull(secondResponse.booking());
     }
 
     @Test
@@ -69,12 +69,12 @@ public class InMemoryBookingServiceTest {
         );
         BookingResponse firstResponse = bookingService.createBooking(request);
         BookingResponse secondResponse = bookingService.createBooking(request);
-        assertEquals(firstResponse.isSuccess(), secondResponse.isSuccess());
-        assertEquals(firstResponse.getRequestId(), secondResponse.getRequestId());
-        assertEquals(firstResponse.getMessage(), secondResponse.getMessage());
-        assertNotNull(firstResponse.getBooking());
-        assertNotNull(secondResponse.getBooking());
-        assertEquals(firstResponse.getBooking().getId(), secondResponse.getBooking().getId());
+        assertEquals(firstResponse.success(), secondResponse.success());
+        assertEquals(firstResponse.requestId(), secondResponse.requestId());
+        assertEquals(firstResponse.message(), secondResponse.message());
+        assertNotNull(firstResponse.booking());
+        assertNotNull(secondResponse.booking());
+        assertEquals(firstResponse.booking().bookingId(), secondResponse.booking().bookingId());
     }
 
     @Test
@@ -91,7 +91,7 @@ public class InMemoryBookingServiceTest {
         BookingResponse createResponse = bookingService.createBooking(createRequest);
         BookingModificationRequest modificationRequest = new BookingModificationRequest(
                 "request-2",
-                createResponse.getBooking().getId(),
+                createResponse.booking().bookingId(),
                 "hotel-1",
                 "room-101",
                 "customer-1",
@@ -99,11 +99,11 @@ public class InMemoryBookingServiceTest {
                 LocalDate.of(2026, 4, 15)
         );
         BookingResponse modificationResponse = bookingService.modifyBooking(modificationRequest);
-        assertTrue(modificationResponse.isSuccess());
-        assertNotNull(modificationResponse.getBooking());
-        assertEquals(BookingStatus.MODIFIED, modificationResponse.getBooking().getStatus());
-        assertEquals(LocalDate.of(2026, 4, 13), modificationResponse.getBooking().getCheckInDate());
-        assertEquals(LocalDate.of(2026, 4, 15), modificationResponse.getBooking().getCheckOutDate());
+        assertTrue(modificationResponse.success());
+        assertNotNull(modificationResponse.booking());
+        assertEquals(BookingStatus.MODIFIED, modificationResponse.booking().status());
+        assertEquals(LocalDate.of(2026, 4, 13), modificationResponse.booking().checkInDate());
+        assertEquals(LocalDate.of(2026, 4, 15), modificationResponse.booking().checkOutDate());
     }
 
     @Test
@@ -129,7 +129,7 @@ public class InMemoryBookingServiceTest {
         bookingService.createBooking(secondBookingRequest);
         BookingModificationRequest modificationRequest = new BookingModificationRequest(
                 "request-3",
-                firstBookingResponse.getBooking().getId(),
+                firstBookingResponse.booking().bookingId(),
                 "hotel-1",
                 "room-102",
                 "customer-1",
@@ -137,7 +137,7 @@ public class InMemoryBookingServiceTest {
                 LocalDate.of(2026, 4, 13)
         );
         BookingResponse modificationResponse = bookingService.modifyBooking(modificationRequest);
-        assertFalse(modificationResponse.isSuccess());
-        assertNull(modificationResponse.getBooking());
+        assertFalse(modificationResponse.success());
+        assertNull(modificationResponse.booking());
     }
 }

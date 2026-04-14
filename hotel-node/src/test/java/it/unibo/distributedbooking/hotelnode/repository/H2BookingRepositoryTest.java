@@ -38,9 +38,9 @@ class H2BookingRepositoryTest {
         Optional<Booking> result = bookingRepository.findById("booking-1");
 
         assertTrue(result.isPresent());
-        assertEquals("booking-1", result.get().getId());
-        assertEquals("hotel-1", result.get().getHotelId());
-        assertEquals(BookingStatus.CONFIRMED, result.get().getStatus());
+        assertEquals("booking-1", result.get().bookingId());
+        assertEquals("hotel-1", result.get().hotelId());
+        assertEquals(BookingStatus.CONFIRMED, result.get().status());
     }
 
     @Test
@@ -102,8 +102,8 @@ class H2BookingRepositoryTest {
         Optional<Booking> result = bookingRepository.findById("booking-1");
 
         assertTrue(result.isPresent());
-        assertEquals(LocalDate.of(2026, 4, 11), result.get().getCheckInDate());
-        assertEquals(LocalDate.of(2026, 4, 14), result.get().getCheckOutDate());
-        assertEquals(BookingStatus.MODIFIED, result.get().getStatus());
+        assertEquals(LocalDate.of(2026, 4, 11), result.get().checkInDate());
+        assertEquals(LocalDate.of(2026, 4, 14), result.get().checkOutDate());
+        assertEquals(BookingStatus.MODIFIED, result.get().status());
     }
 }

@@ -5,3 +5,6 @@ it/unibo/distributedbooking/coordinator/client/HttpHotelNodeClient.class
 it/unibo/distributedbooking/coordinator/CoordinatorApplication.class
 it/unibo/distributedbooking/coordinator/service/BookingCoordinatorService.class
 it/unibo/distributedbooking/coordinator/service/HotelRegistryService.class
+it/unibo/distributedbooking/coordinator/service/InMemoryBookingLocatorService.class
+it/unibo/distributedbooking/coordinator/service/BookingLocatorService.class
+it/unibo/distributedbooking/coordinator/heartbeat/HeartbeatService.class
