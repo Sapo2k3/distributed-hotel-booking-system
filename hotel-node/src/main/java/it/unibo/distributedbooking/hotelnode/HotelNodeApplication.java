@@ -36,7 +36,7 @@ public class HotelNodeApplication {
             server.setExecutor(Executors.newFixedThreadPool(10));
             server.start();
 
-            System.out.println("🚀 Hotel node '" + HOTEL_ID + "' listening on port " + PORT);
+            System.out.println("Hotel node '" + HOTEL_ID + "' listening on port " + PORT);
             System.out.println("Database: " + JDBC_URL);
             System.out.println("Endpoints:");
             System.out.println("  POST http://localhost:" + PORT + "/bookings");

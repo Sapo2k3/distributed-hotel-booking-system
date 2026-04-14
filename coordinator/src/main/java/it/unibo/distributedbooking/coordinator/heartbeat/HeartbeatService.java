@@ -10,13 +10,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class HeartbeatService {
 
+    private static final int HEARTBEAT_INTERVAL_SECONDS = 10;
+
     private final HotelRegistryService hotelRegistryService;
     private final HotelNodeClient hotelNodeClient;
     private final ScheduledExecutorService scheduler;
     private final AtomicBoolean running = new AtomicBoolean(false);
 
-    private static final int HEARTBEAT_INTERVAL_SECONDS = 10;
-    private static final int HEARTBEAT_TIMEOUT_SECONDS = 30;
+
 
     public HeartbeatService(final HotelRegistryService hotelRegistryService,
                             final HotelNodeClient hotelNodeClient) {

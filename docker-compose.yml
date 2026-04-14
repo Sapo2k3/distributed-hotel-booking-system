@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  coordinator:
+    build:
+      context: .
+      dockerfile: coordinator/Dockerfile
+    container_name: coordinator
+    depends_on:
+      - hotel-node-1
+      - hotel-node-2
+    ports:
+      - "8080:8080"
+    networks:
+      - distributed-booking-net
+
+  hotel-node-1:
+    build:
+      context: .
+      dockerfile: hotel-node/Dockerfile
+    container_name: hotel-node-1
+    ports:
+      - "8081:8081"
+    networks:
+      - distributed-booking-net
+
+  hotel-node-2:
+    build:
+      context: .
+      dockerfile: hotel-node/Dockerfile
+    container_name: hotel-node-2
+    ports:
+      - "8082:8082"
+    networks:
+      - distributed-booking-net
+
+networks:
+  distributed-booking-net:
+    driver: bridge
