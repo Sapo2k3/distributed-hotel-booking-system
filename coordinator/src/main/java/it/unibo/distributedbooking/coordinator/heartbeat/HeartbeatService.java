@@ -30,7 +30,7 @@ public class HeartbeatService {
         if (running.compareAndSet(false, true)) {
             scheduler.scheduleAtFixedRate(
                     this::performHeartbeatCheck,
-                    HEARTBEAT_INTERVAL_SECONDS,
+                    0,
                     HEARTBEAT_INTERVAL_SECONDS,
                     TimeUnit.SECONDS
             );
@@ -51,7 +51,7 @@ public class HeartbeatService {
             boolean healthy = hotelNodeClient.isHealthy(baseUrl);
             if (healthy){
                 if (!hotelNode.isUp()) {
-                    System.out.println("Hotel" + hotelNode.getHotelId() + "recovered");
+                    System.out.println("Hotel " + hotelNode.getHotelId() + " recovered");
                 }
                 hotelNode.markUp();
             } else {

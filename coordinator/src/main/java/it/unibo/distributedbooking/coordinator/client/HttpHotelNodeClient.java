@@ -12,8 +12,12 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.URI;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 
 public class HttpHotelNodeClient implements HotelNodeClient {
+
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(2);
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(3);
 
     private final HttpClient httpClient;
 
@@ -88,16 +92,27 @@ public class HttpHotelNodeClient implements HotelNodeClient {
     }
 
     @Override
-    public boolean isHealthy(String baseUrl) {
-        try{
+    public boolean isHealthy(final String baseUrl) {
+        String healthUrl = baseUrl + "/health";
+
+        try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(baseUrl + "/health"))
+                    .uri(URI.create(healthUrl))
+                    .timeout(REQUEST_TIMEOUT)
                     .GET()
                     .build();
+
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            System.out.println("Health check " + healthUrl + " -> " + response.statusCode());
+
             return response.statusCode() == 200;
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            System.out.println("Health check interrupted for " + healthUrl + ": " + e.getMessage());
+            return false;
+        } catch (IOException e) {
+            System.out.println("Health check failed for " + healthUrl + ": " + e.getMessage());
             return false;
         }
     }
