@@ -45,6 +45,10 @@ public class HeartbeatService {
         }
     }
 
+    void performHeartbeatCheckForTest() {
+        performHeartbeatCheck();
+    }
+
     private void performHeartbeatCheck() {
         hotelRegistryService.findAllHotels().forEach(hotelNode -> {
             String baseUrl = "http://" + hotelNode.getHost() + ":" + hotelNode.getPort();

@@ -1,6 +1,7 @@
 package it.unibo.distributedbooking.coordinator;
 
-import it.unibo.distributedbooking.common.model.BookingRequest;
+import com.sun.net.httpserver.HttpServer;
+import it.unibo.distributedbooking.coordinator.api.BookingHttpHandler;
 import it.unibo.distributedbooking.coordinator.client.HotelNodeClient;
 import it.unibo.distributedbooking.coordinator.client.HttpHotelNodeClient;
 import it.unibo.distributedbooking.coordinator.heartbeat.HeartbeatService;
@@ -10,11 +11,15 @@ import it.unibo.distributedbooking.coordinator.service.HotelRegistryService;
 import it.unibo.distributedbooking.coordinator.service.InMemoryBookingLocatorService;
 import it.unibo.distributedbooking.coordinator.service.InMemoryHotelRegistryService;
 
-import java.time.LocalDate;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.concurrent.Executors;
 
 public class CoordinatorApplication {
 
-    public static void main(String[] args) {
+    private static final int COORDINATOR_PORT = 8080;
+
+    public static void main(String[] args) throws IOException {
         HotelRegistryService registryService = new InMemoryHotelRegistryService();
         InMemoryBookingLocatorService bookingLocatorService = new InMemoryBookingLocatorService();
         HotelNodeClient hotelNodeClient = new HttpHotelNodeClient();
@@ -22,7 +27,7 @@ public class CoordinatorApplication {
         registryService.registerHotel(new HotelNodeInfo("hotel-1", "hotel-node-1", 8081));
         registryService.registerHotel(new HotelNodeInfo("hotel-2", "hotel-node-2", 8082));
 
-        BookingCoordinatorService coordinator = new BookingCoordinatorService(
+        BookingCoordinatorService coordinatorService = new BookingCoordinatorService(
                 registryService,
                 hotelNodeClient,
                 bookingLocatorService
@@ -33,20 +38,21 @@ public class CoordinatorApplication {
                 hotelNodeClient
         );
 
+        HttpServer server = HttpServer.create(new InetSocketAddress(COORDINATOR_PORT), 0);
+        server.createContext("/bookings", new BookingHttpHandler(coordinatorService));
+        server.setExecutor(Executors.newCachedThreadPool());
+
         heartbeatService.start();
+        server.start();
 
-        BookingRequest request = new BookingRequest(
-                "req-demo-1",
-                "hotel-1",
-                "room-101",
-                "customer-1",
-                LocalDate.of(2026, 4, 10),
-                LocalDate.of(2026, 4, 12)
-        );
+        System.out.println("Coordinator listening on port " + COORDINATOR_PORT);
+        System.out.println("Endpoints:");
+        System.out.println("  POST /bookings");
 
-        var response = coordinator.coordinateBooking(request);
-        System.out.println("Coordinator response: " + response.success() + " - " + response.message());
-
-        Runtime.getRuntime().addShutdownHook(new Thread(heartbeatService::stop));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Stopping coordinator...");
+            heartbeatService.stop();
+            server.stop(0);
+        }));
     }
 }
