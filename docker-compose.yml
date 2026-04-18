@@ -1,17 +1,4 @@
 services:
-  coordinator:
-    build:
-      context: .
-      dockerfile: ./coordinator/Dockerfile
-    container_name: coordinator
-    depends_on:
-      - hotel-node-1
-      - hotel-node-2
-    ports:
-      - "8080:8080"
-    networks:
-      - distributed-booking
-
   hotel-node-1:
     build:
       context: .
@@ -22,6 +9,12 @@ services:
       HOTEL_NODE_PORT: 8081
     ports:
       - "8081:8081"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     networks:
       - distributed-booking
 
@@ -35,6 +28,27 @@ services:
       HOTEL_NODE_PORT: 8082
     ports:
       - "8082:8082"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - distributed-booking
+
+  coordinator:
+    build:
+      context: .
+      dockerfile: ./coordinator/Dockerfile
+    container_name: coordinator
+    depends_on:
+      hotel-node-1:
+        condition: service_healthy
+      hotel-node-2:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
     networks:
       - distributed-booking
 
