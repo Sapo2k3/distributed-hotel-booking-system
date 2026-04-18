@@ -7,10 +7,11 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemoryBookingLocatorService implements BookingLocatorService {
 
-    private final Map<String, Booking> bookingsById = new HashMap<>();
+    private final Map<String, Booking> bookingsById = new ConcurrentHashMap<>();
 
     @Override
     public void registerBooking(final String bookingId,
