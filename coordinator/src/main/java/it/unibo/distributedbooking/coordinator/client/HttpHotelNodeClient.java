@@ -1,6 +1,5 @@
 package it.unibo.distributedbooking.coordinator.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.unibo.distributedbooking.hotelnode.util.JsonUtil;
 import it.unibo.distributedbooking.common.model.BookingCancellationRequest;
 import it.unibo.distributedbooking.common.model.BookingModificationRequest;
@@ -22,7 +21,9 @@ public class HttpHotelNodeClient implements HotelNodeClient {
     private final HttpClient httpClient;
 
     public HttpHotelNodeClient() {
-        this(HttpClient.newHttpClient());
+        this(HttpClient.newBuilder()
+                .connectTimeout(CONNECT_TIMEOUT)
+                .build());
     }
 
     public HttpHotelNodeClient(final HttpClient httpClient) {
