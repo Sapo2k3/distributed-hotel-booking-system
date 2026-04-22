@@ -1,8 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
          https://maven.apache.org/xsd/maven-4.0.0.xsd">
-
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -19,19 +19,15 @@
     <description>JavaFX client GUI for distributed hotel booking</description>
 
     <properties>
-        <javafx.version>17.0.6</javafx.version>
+        <java.version>17</java.version>
+        <javafx.version>21.0.1</javafx.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>it.unibo.distributedbooking</groupId>
             <artifactId>common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>it.unibo.distributedbooking</groupId>
-            <artifactId>coordinator</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -48,9 +44,15 @@
         </dependency>
 
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.17.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.17.2</version>
         </dependency>
     </dependencies>
 
@@ -66,5 +68,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
