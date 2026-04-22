@@ -17,11 +17,12 @@ public class HotelsHttpHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    public void handle(final HttpExchange exchange) throws IOException {
         if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
             exchange.sendResponseHeaders(405, -1);
             return;
         }
+
         try {
             byte[] responseBytes = JsonUtil.toJsonBytes(hotelRegistryService.findAllHotels());
             exchange.getResponseHeaders().add("Content-Type", "application/json");
@@ -30,7 +31,7 @@ public class HotelsHttpHandler implements HttpHandler {
                 os.write(responseBytes);
             }
         } catch (Exception e) {
-            byte[] errorBytes = JsonUtil.toJsonBytes(new HotelsErrorResponse("Internal server error: " + e.getMessage()));
+            byte[] errorBytes = JsonUtil.toJsonBytes(new ErrorResponse("Internal server error: " + e.getMessage()));
             exchange.getResponseHeaders().add("Content-Type", "application/json");
             exchange.sendResponseHeaders(500, errorBytes.length);
             try (OutputStream os = exchange.getResponseBody()) {
@@ -39,6 +40,6 @@ public class HotelsHttpHandler implements HttpHandler {
         }
     }
 
-    private record HotelsErrorResponse(String message) {
+    private record ErrorResponse(String message) {
     }
 }

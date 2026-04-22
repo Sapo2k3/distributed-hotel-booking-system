@@ -1,6 +1,7 @@
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/CoordinatorApplication.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/api/BookingHttpHandler.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/api/CancelHttpHandler.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/api/HotelsHttpHandler.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/api/ModifyHttpHandler.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/client/HotelNodeClient.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/client/HttpHotelNodeClient.java

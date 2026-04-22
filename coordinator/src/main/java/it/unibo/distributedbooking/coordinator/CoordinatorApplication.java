@@ -16,52 +16,67 @@ import it.unibo.distributedbooking.coordinator.service.InMemoryHotelRegistryServ
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class CoordinatorApplication {
 
     private static final int COORDINATOR_PORT = 8080;
+    private static final int SHUTDOWN_TIMEOUT_SECONDS = 5;
 
     public static void main(String[] args) throws IOException {
         HotelRegistryService registryService = new InMemoryHotelRegistryService();
         InMemoryBookingLocatorService bookingLocatorService = new InMemoryBookingLocatorService();
         HotelNodeClient hotelNodeClient = new HttpHotelNodeClient();
-
-        registryService.registerHotel(new HotelNodeInfo("hotel-1", "hotel-node-1", 8081));
-        registryService.registerHotel(new HotelNodeInfo("hotel-2", "hotel-node-2", 8082));
-
+        registryService.registerHotel(new HotelNodeInfo("hotel-1", "localhost", 8081));
+        registryService.registerHotel(new HotelNodeInfo("hotel-2", "localhost", 8082));
         BookingCoordinatorService coordinatorService = new BookingCoordinatorService(
                 registryService,
                 hotelNodeClient,
                 bookingLocatorService
         );
-
         HeartbeatService heartbeatService = new HeartbeatService(
                 registryService,
                 hotelNodeClient
         );
-
         HttpServer server = HttpServer.create(new InetSocketAddress(COORDINATOR_PORT), 0);
         server.createContext("/bookings", new BookingHttpHandler(coordinatorService));
         server.createContext("/cancellations", new CancelHttpHandler(coordinatorService));
         server.createContext("/bookings/modify", new ModifyHttpHandler(coordinatorService));
         server.createContext("/hotels", new HotelsHttpHandler(registryService));
-        server.setExecutor(Executors.newCachedThreadPool());
-
+        ExecutorService executor = Executors.newCachedThreadPool();
+        server.setExecutor(executor);
         heartbeatService.start();
         server.start();
-
-        System.out.println("Coordinator listening on port " + COORDINATOR_PORT);
+        System.out.println("=== Distributed Hotel Booking Coordinator ===");
+        System.out.println("Listening on http://localhost:" + COORDINATOR_PORT);
+        System.out.println("Registered hotels:");
+        registryService.findAllHotels().forEach(hotel ->
+                System.out.println("  " + hotel.getHotelId() + " -> " + hotel.getHost() + ":" + hotel.getPort())
+        );
         System.out.println("Endpoints:");
         System.out.println("  POST /bookings");
         System.out.println("  POST /cancellations");
         System.out.println("  POST /bookings/modify");
         System.out.println("  GET  /hotels");
-
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Stopping coordinator...");
-            heartbeatService.stop();
-            server.stop(0);
+            System.out.println("\n=== Coordinator shutdown initiated ===");
+            try {
+                heartbeatService.stop();
+                server.stop(0);
+                executor.shutdown();
+                if (executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                    System.out.println("Executor terminated gracefully");
+                } else {
+                    System.out.println("Force stopping executor...");
+                    executor.shutdownNow();
+                }
+                System.out.println("Coordinator stopped cleanly");
+            } catch (InterruptedException e) {
+                System.out.println("Shutdown interrupted: " + e.getMessage());
+                Thread.currentThread().interrupt();
+            }
         }));
     }
 }

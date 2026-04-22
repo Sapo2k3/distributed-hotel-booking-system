@@ -1,5 +1,8 @@
 package it.unibo.distributedbooking.coordinator.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class HotelNodeInfo {
 
     private String hotelId;
@@ -20,16 +23,32 @@ public class HotelNodeInfo {
         return this.hotelId;
     }
 
+    public void setHotelId(final String hotelId) {
+        this.hotelId = hotelId;
+    }
+
     public String getHost() {
         return this.host;
+    }
+
+    public void setHost(final String host) {
+        this.host = host;
     }
 
     public int getPort() {
         return this.port;
     }
 
+    public void setPort(final int port) {
+        this.port = port;
+    }
+
     public boolean isHealthy() {
         return this.healthy;
+    }
+
+    public void setHealthy(final boolean healthy) {
+        this.healthy = healthy;
     }
 
     public void markUp() {

@@ -23,12 +23,22 @@
             <Label text="Booking ID:" />
             <TextField fx:id="bookingIdField" prefWidth="200" />
             <Button fx:id="cancelButton" onAction="#cancelBooking" text="Cancel" />
+            <Button fx:id="modifyButton" onAction="#modifyBooking" text="Modify" />
             <Button fx:id="refreshButton" onAction="#refreshHotels" text="Refresh Hotels" />
+        </HBox>
+
+        <HBox spacing="10">
+            <Label text="New Check-in:" />
+            <DatePicker fx:id="checkInDatePicker" />
+            <Label text="New Check-out:" />
+            <DatePicker fx:id="checkOutDatePicker" />
         </HBox>
 
         <TableView fx:id="hotelTable">
             <columns>
-                <TableColumn fx:id="hotelIdCol" prefWidth="100" text="Hotel ID" />
+                <TableColumn fx:id="hotelIdCol" prefWidth="160" text="Hotel ID" />
+                <TableColumn fx:id="hostCol" prefWidth="180" text="Host" />
+                <TableColumn fx:id="portCol" prefWidth="100" text="Port" />
                 <TableColumn fx:id="statusCol" prefWidth="100" text="Status" />
             </columns>
         </TableView>

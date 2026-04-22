@@ -1,7 +1,9 @@
 it/unibo/distributedbooking/coordinator/model/HotelNodeInfo.class
+it/unibo/distributedbooking/coordinator/api/HotelsHttpHandler$ErrorResponse.class
 it/unibo/distributedbooking/coordinator/api/ModifyHttpHandler.class
 it/unibo/distributedbooking/coordinator/CoordinatorApplication.class
 it/unibo/distributedbooking/coordinator/service/HotelRegistryService.class
+it/unibo/distributedbooking/coordinator/api/HotelsHttpHandler.class
 it/unibo/distributedbooking/coordinator/service/InMemoryBookingLocatorService.class
 it/unibo/distributedbooking/coordinator/service/BookingLocatorService.class
 it/unibo/distributedbooking/coordinator/heartbeat/HeartbeatService.class

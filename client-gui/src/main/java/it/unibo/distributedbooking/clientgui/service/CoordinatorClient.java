@@ -1,9 +1,11 @@
 package it.unibo.distributedbooking.clientgui.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import it.unibo.distributedbooking.common.model.BookingCancellationRequest;
+import it.unibo.distributedbooking.common.model.BookingModificationRequest;
 import it.unibo.distributedbooking.common.model.BookingRequest;
 import it.unibo.distributedbooking.common.model.BookingResponse;
 import it.unibo.distributedbooking.coordinator.model.HotelNodeInfo;
@@ -26,6 +28,7 @@ public class CoordinatorClient {
         this.httpClient = HttpClient.newHttpClient();
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     public List<HotelNodeInfo> fetchHotels() {
@@ -34,10 +37,16 @@ public class CoordinatorClient {
                     .uri(URI.create(baseUrl + "/hotels"))
                     .GET()
                     .build();
+
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if(response.statusCode() != 200) {
+
+            System.out.println("STATUS = " + response.statusCode());
+            System.out.println("BODY = " + response.body());
+
+            if (response.statusCode() != 200) {
                 throw new RuntimeException("Failed to fetch hotels: HTTP " + response.statusCode());
             }
+
             return objectMapper.readValue(
                     response.body(),
                     new TypeReference<List<HotelNodeInfo>>() {}
@@ -56,15 +65,22 @@ public class CoordinatorClient {
         return post("/cancellations", requestBody);
     }
 
+    public BookingResponse modifyBooking(final BookingModificationRequest requestBody) {
+        return post("/bookings/modify", requestBody);
+    }
+
     private BookingResponse post(final String path, final Object requestBody) {
         try {
             String json = objectMapper.writeValueAsString(requestBody);
+
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl + path))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(json))
                     .build();
+
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
             return objectMapper.readValue(response.body(), BookingResponse.class);
         } catch (IOException | InterruptedException e) {
             Thread.currentThread().interrupt();
