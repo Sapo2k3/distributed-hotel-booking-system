@@ -1,2 +1,3 @@
+it/unibo/distributedbooking/coordinator/heartbeat/HeartbeatServiceTest.class
 it/unibo/distributedbooking/coordinator/service/InMemoryHotelRegistryServiceTest.class
 it/unibo/distributedbooking/coordinator/service/BookingCoordinatorServiceTest.class

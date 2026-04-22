@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:controller="it.unibo.distributedbooking.clientgui.controller.BookingController"
+      xmlns="http://javafx.com/javafx/21.0.1" xmlns:fx="http://javafx.com/fxml/1">
+    <children>
+        <Label text="Distributed Hotel Booking" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+
+        <HBox spacing="10">
+            <Label text="Hotel:" />
+            <ComboBox fx:id="hotelCombo" prefWidth="150" />
+            <Label text="Room:" />
+            <TextField fx:id="roomField" prefWidth="80" />
+            <Label text="Customer:" />
+            <TextField fx:id="customerField" prefWidth="100" />
+            <Button fx:id="bookButton" onAction="#bookRoom" text="Book Room" />
+        </HBox>
+
+        <HBox spacing="10">
+            <Label text="Booking ID:" />
+            <TextField fx:id="bookingIdField" prefWidth="200" />
+            <Button fx:id="cancelButton" onAction="#cancelBooking" text="Cancel" />
+            <Button fx:id="refreshButton" onAction="#refreshHotels" text="Refresh Hotels" />
+        </HBox>
+
+        <TableView fx:id="hotelTable">
+            <columns>
+                <TableColumn fx:id="hotelIdCol" prefWidth="100" text="Hotel ID" />
+                <TableColumn fx:id="statusCol" prefWidth="100" text="Status" />
+            </columns>
+        </TableView>
+
+        <Label fx:id="statusLabel" text="Ready" />
+    </children>
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+    <spacing>20.0</spacing>
+</VBox>
