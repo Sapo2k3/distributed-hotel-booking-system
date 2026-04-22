@@ -32,6 +32,12 @@
         </dependency>
 
         <dependency>
+            <groupId>it.unibo.distributedbooking</groupId>
+            <artifactId>coordinator</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>

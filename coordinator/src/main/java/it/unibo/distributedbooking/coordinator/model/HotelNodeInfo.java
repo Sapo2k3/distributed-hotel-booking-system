@@ -2,10 +2,13 @@ package it.unibo.distributedbooking.coordinator.model;
 
 public class HotelNodeInfo {
 
-    private final String hotelId;
-    private final String host;
-    private final int port;
+    private String hotelId;
+    private String host;
+    private int port;
     private boolean healthy = true;
+
+    public HotelNodeInfo() {
+    }
 
     public HotelNodeInfo(final String hotelId, final String host, final int port) {
         this.hotelId = hotelId;

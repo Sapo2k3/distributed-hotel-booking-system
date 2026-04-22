@@ -3,6 +3,7 @@ package it.unibo.distributedbooking.coordinator;
 import com.sun.net.httpserver.HttpServer;
 import it.unibo.distributedbooking.coordinator.api.BookingHttpHandler;
 import it.unibo.distributedbooking.coordinator.api.CancelHttpHandler;
+import it.unibo.distributedbooking.coordinator.api.HotelsHttpHandler;
 import it.unibo.distributedbooking.coordinator.api.ModifyHttpHandler;
 import it.unibo.distributedbooking.coordinator.client.HotelNodeClient;
 import it.unibo.distributedbooking.coordinator.client.HttpHotelNodeClient;
@@ -44,6 +45,7 @@ public class CoordinatorApplication {
         server.createContext("/bookings", new BookingHttpHandler(coordinatorService));
         server.createContext("/cancellations", new CancelHttpHandler(coordinatorService));
         server.createContext("/bookings/modify", new ModifyHttpHandler(coordinatorService));
+        server.createContext("/hotels", new HotelsHttpHandler(registryService));
         server.setExecutor(Executors.newCachedThreadPool());
 
         heartbeatService.start();
@@ -53,6 +55,8 @@ public class CoordinatorApplication {
         System.out.println("Endpoints:");
         System.out.println("  POST /bookings");
         System.out.println("  POST /cancellations");
+        System.out.println("  POST /bookings/modify");
+        System.out.println("  GET  /hotels");
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Stopping coordinator...");
