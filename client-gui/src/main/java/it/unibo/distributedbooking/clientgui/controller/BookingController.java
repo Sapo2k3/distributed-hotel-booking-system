@@ -55,6 +55,8 @@ public class BookingController {
     @FXML private Label statusLabel;
 
     private static final String STATUS_CANCELLED = "CANCELLED";
+    private static final String STATUS_CONFIRMED = "CONFIRMED";
+    private static final String STATUS_MODIFIED = "MODIFIED";
 
     private final CoordinatorClient coordinatorClient = new CoordinatorClient("http://localhost:8080");
 
@@ -64,7 +66,6 @@ public class BookingController {
         hostCol.setCellValueFactory(new PropertyValueFactory<>("host"));
         portCol.setCellValueFactory(new PropertyValueFactory<>("port"));
         statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
-
         bookingIdBookingCol.setCellValueFactory(new PropertyValueFactory<>("bookingId"));
         hotelIdBookingCol.setCellValueFactory(new PropertyValueFactory<>("hotelId"));
         roomIdBookingCol.setCellValueFactory(new PropertyValueFactory<>("roomId"));
@@ -72,13 +73,12 @@ public class BookingController {
         checkInBookingCol.setCellValueFactory(new PropertyValueFactory<>("checkInDate"));
         checkOutBookingCol.setCellValueFactory(new PropertyValueFactory<>("checkOutDate"));
         statusBookingCol.setCellValueFactory(new PropertyValueFactory<>("status"));
-
         checkInDatePicker.setValue(LocalDate.now().plusDays(1));
         checkOutDatePicker.setValue(LocalDate.now().plusDays(2));
-
         bookingTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, selectedBooking) -> {
             if (selectedBooking != null) {
                 populateFormFromSelectedBooking(selectedBooking);
+                statusLabel.setText(buildSelectionMessage(selectedBooking));
             }
             updateActionButtonsState();
         });
@@ -87,17 +87,17 @@ public class BookingController {
             @Override
             protected void updateItem(final BookingViewModel item, final boolean empty) {
                 super.updateItem(item, empty);
-
                 if (empty || item == null) {
                     setStyle("");
                 } else if (STATUS_CANCELLED.equalsIgnoreCase(item.getStatus())) {
                     setStyle("-fx-background-color: #f4f4f4; -fx-text-fill: #888888;");
+                } else if (STATUS_MODIFIED.equalsIgnoreCase(item.getStatus())) {
+                    setStyle("-fx-background-color: #fff8e1;");
                 } else {
                     setStyle("");
                 }
             }
         });
-
         updateActionButtonsState();
         refreshAllData();
     }
@@ -105,38 +105,32 @@ public class BookingController {
     @FXML
     private void bookRoom() {
         try {
-            String selectedHotel = hotelCombo.getValue();
-            String roomId = normalize(roomField.getText());
-            String customerId = normalize(customerField.getText());
-            LocalDate checkIn = checkInDatePicker.getValue();
-            LocalDate checkOut = checkOutDatePicker.getValue();
-
+            final String selectedHotel = hotelCombo.getValue();
+            final String roomId = normalize(roomField.getText());
+            final String customerId = normalize(customerField.getText());
+            final LocalDate checkIn = checkInDatePicker.getValue();
+            final LocalDate checkOut = checkOutDatePicker.getValue();
             if (selectedHotel == null || selectedHotel.isBlank()) {
                 statusLabel.setText("Please select a hotel.");
                 return;
             }
-
             if (roomId == null || roomId.isBlank()) {
                 statusLabel.setText("Please enter a room.");
                 return;
             }
-
             if (customerId == null || customerId.isBlank()) {
                 statusLabel.setText("Please enter a customer.");
                 return;
             }
-
             if (checkIn == null || checkOut == null) {
                 statusLabel.setText("Please select check-in and check-out dates.");
                 return;
             }
-
             if (!isValidDateRange(checkIn, checkOut)) {
                 statusLabel.setText("Check-out date must be after check-in.");
                 return;
             }
-
-            BookingRequest request = new BookingRequest(
+            final BookingRequest request = new BookingRequest(
                     "gui-book-" + System.currentTimeMillis(),
                     selectedHotel,
                     roomId,
@@ -144,19 +138,11 @@ public class BookingController {
                     checkIn,
                     checkOut
             );
-
-            BookingResponse response = coordinatorClient.createBooking(request);
+            final BookingResponse response = coordinatorClient.createBooking(request);
             statusLabel.setText(response.message());
-
             if (response.success() && response.booking() != null) {
-                bookingIdField.setText(response.booking().bookingId());
-                hotelCombo.setValue(response.booking().hotelId());
-                roomField.setText(response.booking().roomId());
-                customerField.setText(response.booking().customerId());
-                checkInDatePicker.setValue(response.booking().checkInDate());
-                checkOutDatePicker.setValue(response.booking().checkOutDate());
+                applyBookingToForm(response.booking());
             }
-
             refreshAllDataSilently();
         } catch (Exception e) {
             statusLabel.setText("Booking failed: " + rootMessage(e));
@@ -166,37 +152,25 @@ public class BookingController {
     @FXML
     private void cancelBooking() {
         try {
-            BookingViewModel selectedBooking = bookingTable.getSelectionModel().getSelectedItem();
-
+            final BookingViewModel selectedBooking = bookingTable.getSelectionModel().getSelectedItem();
             if (selectedBooking != null && STATUS_CANCELLED.equalsIgnoreCase(selectedBooking.getStatus())) {
                 statusLabel.setText("Selected booking is already cancelled.");
                 return;
             }
-
-            String bookingId = resolveSelectedOrTypedBookingId();
-
+            final String bookingId = resolveSelectedOrTypedBookingId();
             if (bookingId == null || bookingId.isBlank()) {
                 statusLabel.setText("Please enter or select a booking ID.");
                 return;
             }
-
-            BookingCancellationRequest request = new BookingCancellationRequest(
+            final BookingCancellationRequest request = new BookingCancellationRequest(
                     "gui-cancel-" + System.currentTimeMillis(),
                     bookingId
             );
-
-            BookingResponse response = coordinatorClient.cancelBooking(request);
+            final BookingResponse response = coordinatorClient.cancelBooking(request);
             statusLabel.setText(response.message());
-
             if (response.success() && response.booking() != null) {
-                bookingIdField.setText(response.booking().bookingId());
-                hotelCombo.setValue(response.booking().hotelId());
-                roomField.setText(response.booking().roomId());
-                customerField.setText(response.booking().customerId());
-                checkInDatePicker.setValue(response.booking().checkInDate());
-                checkOutDatePicker.setValue(response.booking().checkOutDate());
+                applyBookingToForm(response.booking());
             }
-
             refreshAllDataSilently();
         } catch (Exception e) {
             statusLabel.setText("Cancellation failed: " + rootMessage(e));
@@ -206,51 +180,46 @@ public class BookingController {
     @FXML
     private void modifyBooking() {
         try {
-            BookingViewModel selectedBooking = bookingTable.getSelectionModel().getSelectedItem();
-
+            final BookingViewModel selectedBooking = bookingTable.getSelectionModel().getSelectedItem();
             if (selectedBooking != null && STATUS_CANCELLED.equalsIgnoreCase(selectedBooking.getStatus())) {
                 statusLabel.setText("Cannot modify a cancelled booking.");
                 return;
             }
-
-            String bookingId = resolveSelectedOrTypedBookingId();
-            String selectedHotel = hotelCombo.getValue();
-            String roomId = normalize(roomField.getText());
-            String customerId = normalize(customerField.getText());
-            LocalDate checkIn = checkInDatePicker.getValue();
-            LocalDate checkOut = checkOutDatePicker.getValue();
-
+            if (selectedBooking != null && !STATUS_CONFIRMED.equalsIgnoreCase(selectedBooking.getStatus())) {
+                statusLabel.setText("Only confirmed bookings can be modified.");
+                return;
+            }
+            final String bookingId = resolveSelectedOrTypedBookingId();
+            final String selectedHotel = hotelCombo.getValue();
+            final String roomId = normalize(roomField.getText());
+            final String customerId = normalize(customerField.getText());
+            final LocalDate checkIn = checkInDatePicker.getValue();
+            final LocalDate checkOut = checkOutDatePicker.getValue();
             if (bookingId == null || bookingId.isBlank()) {
                 statusLabel.setText("Please enter or select a booking ID.");
                 return;
             }
-
             if (selectedHotel == null || selectedHotel.isBlank()) {
                 statusLabel.setText("Please select a hotel.");
                 return;
             }
-
             if (roomId == null || roomId.isBlank()) {
                 statusLabel.setText("Please enter a room.");
                 return;
             }
-
             if (customerId == null || customerId.isBlank()) {
                 statusLabel.setText("Please enter a customer.");
                 return;
             }
-
             if (checkIn == null || checkOut == null) {
                 statusLabel.setText("Please select new check-in and check-out dates.");
                 return;
             }
-
             if (!isValidDateRange(checkIn, checkOut)) {
                 statusLabel.setText("Check-out date must be after check-in.");
                 return;
             }
-
-            BookingModificationRequest request = new BookingModificationRequest(
+            final BookingModificationRequest request = new BookingModificationRequest(
                     "gui-modify-" + System.currentTimeMillis(),
                     bookingId,
                     selectedHotel,
@@ -259,19 +228,11 @@ public class BookingController {
                     checkIn,
                     checkOut
             );
-
-            BookingResponse response = coordinatorClient.modifyBooking(request);
+            final BookingResponse response = coordinatorClient.modifyBooking(request);
             statusLabel.setText(response.message());
-
             if (response.success() && response.booking() != null) {
-                bookingIdField.setText(response.booking().bookingId());
-                hotelCombo.setValue(response.booking().hotelId());
-                roomField.setText(response.booking().roomId());
-                customerField.setText(response.booking().customerId());
-                checkInDatePicker.setValue(response.booking().checkInDate());
-                checkOutDatePicker.setValue(response.booking().checkOutDate());
+                applyBookingToForm(response.booking());
             }
-
             refreshAllDataSilently();
         } catch (Exception e) {
             statusLabel.setText("Modify failed: " + rootMessage(e));
@@ -289,12 +250,10 @@ public class BookingController {
     }
 
     private void refreshAllData() {
-        List<HotelNodeInfo> hotels = coordinatorClient.fetchHotels();
+        final List<HotelNodeInfo> hotels = coordinatorClient.fetchHotels();
         applyHotelsToUi(hotels);
-
-        List<Booking> bookings = coordinatorClient.fetchBookings();
+        final List<Booking> bookings = coordinatorClient.fetchBookings();
         applyBookingsToUi(bookings);
-
         updateActionButtonsState();
     }
 
@@ -302,25 +261,20 @@ public class BookingController {
         try {
             refreshAllData();
         } catch (Exception ignored) {
-            // Keep the action result message visible.
         }
     }
 
     private void applyHotelsToUi(final List<HotelNodeInfo> hotels) {
-        String currentSelection = hotelCombo.getValue();
-
-        List<String> hotelIds = hotels.stream()
+        final String currentSelection = hotelCombo.getValue();
+        final List<String> hotelIds = hotels.stream()
                 .map(HotelNodeInfo::getHotelId)
                 .toList();
-
         hotelCombo.setItems(FXCollections.observableArrayList(hotelIds));
-
         if (currentSelection != null && hotelIds.contains(currentSelection)) {
             hotelCombo.setValue(currentSelection);
         } else if (!hotelIds.isEmpty() && hotelCombo.getValue() == null) {
             hotelCombo.setValue(hotelIds.get(0));
         }
-
         hotelTable.setItems(FXCollections.observableArrayList(
                 hotels.stream()
                         .map(hotel -> new HotelViewModel(
@@ -334,8 +288,7 @@ public class BookingController {
     }
 
     private void applyBookingsToUi(final List<Booking> bookings) {
-        String selectedBookingId = resolveSelectedOrTypedBookingId();
-
+        final String selectedBookingId = resolveSelectedOrTypedBookingId();
         bookingTable.setItems(FXCollections.observableArrayList(
                 bookings.stream()
                         .map(booking -> new BookingViewModel(
@@ -349,7 +302,6 @@ public class BookingController {
                         ))
                         .toList()
         ));
-
         if (selectedBookingId != null && !selectedBookingId.isBlank()) {
             bookingTable.getItems().stream()
                     .filter(item -> selectedBookingId.equals(item.getBookingId()))
@@ -368,27 +320,51 @@ public class BookingController {
         hotelCombo.setValue(selectedBooking.getHotelId());
         roomField.setText(selectedBooking.getRoomId());
         customerField.setText(selectedBooking.getCustomerId());
-
         if (selectedBooking.getCheckInDate() != null && !selectedBooking.getCheckInDate().isBlank()) {
             checkInDatePicker.setValue(LocalDate.parse(selectedBooking.getCheckInDate()));
         }
-
         if (selectedBooking.getCheckOutDate() != null && !selectedBooking.getCheckOutDate().isBlank()) {
             checkOutDatePicker.setValue(LocalDate.parse(selectedBooking.getCheckOutDate()));
         }
     }
 
-    private void updateActionButtonsState() {
-        BookingViewModel selectedBooking = bookingTable.getSelectionModel().getSelectedItem();
-        boolean hasSelection = selectedBooking != null;
-        boolean isCancelled = hasSelection && STATUS_CANCELLED.equalsIgnoreCase(selectedBooking.getStatus());
+    private void applyBookingToForm(final Booking booking) {
+        bookingIdField.setText(booking.bookingId());
+        hotelCombo.setValue(booking.hotelId());
+        roomField.setText(booking.roomId());
+        customerField.setText(booking.customerId());
+        checkInDatePicker.setValue(booking.checkInDate());
+        checkOutDatePicker.setValue(booking.checkOutDate());
+    }
 
+    private void updateActionButtonsState() {
+        final BookingViewModel selectedBooking = bookingTable.getSelectionModel().getSelectedItem();
+        final boolean hasSelection = selectedBooking != null;
+        final String status = hasSelection ? selectedBooking.getStatus() : null;
+        final boolean isCancelled = hasSelection && STATUS_CANCELLED.equalsIgnoreCase(status);
+        final boolean isConfirmed = hasSelection && STATUS_CONFIRMED.equalsIgnoreCase(status);
         cancelButton.setDisable(!hasSelection || isCancelled);
-        modifyButton.setDisable(!hasSelection || isCancelled);
+        modifyButton.setDisable(!hasSelection || !isConfirmed);
+        bookButton.setDisable(false);
+    }
+
+    private String buildSelectionMessage(final BookingViewModel selectedBooking) {
+        final String bookingId = selectedBooking.getBookingId();
+        final String status = selectedBooking.getStatus();
+        if (STATUS_CANCELLED.equalsIgnoreCase(status)) {
+            return "Selected booking " + bookingId + " is CANCELLED. Modify and Cancel are disabled.";
+        }
+        if (STATUS_MODIFIED.equalsIgnoreCase(status)) {
+            return "Selected booking " + bookingId + " is MODIFIED. Cancel is available, modify is disabled.";
+        }
+        if (STATUS_CONFIRMED.equalsIgnoreCase(status)) {
+            return "Selected booking " + bookingId + " is CONFIRMED. Cancel and Modify are available.";
+        }
+        return "Selected booking " + bookingId + " with status " + status + ".";
     }
 
     private String resolveSelectedOrTypedBookingId() {
-        BookingViewModel selectedBooking = bookingTable.getSelectionModel().getSelectedItem();
+        final BookingViewModel selectedBooking = bookingTable.getSelectionModel().getSelectedItem();
         if (selectedBooking != null && selectedBooking.getBookingId() != null && !selectedBooking.getBookingId().isBlank()) {
             return selectedBooking.getBookingId();
         }
