@@ -15,7 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class HeartbeatServiceTest {
+class HeartbeatServiceTest {
 
     @Mock
     private HotelRegistryService hotelRegistryService;
@@ -27,12 +27,17 @@ public class HeartbeatServiceTest {
     void shouldMarkDownAndUpAccordingToHealthCheck() {
         HotelNodeInfo hotel1 = new HotelNodeInfo("hotel-1", "hotel-node-1", 8081);
         HotelNodeInfo hotel2 = new HotelNodeInfo("hotel-2", "hotel-node-2", 8082);
+        hotel1.markUp();
+        hotel2.markDown();
         when(hotelRegistryService.findAllHotels()).thenReturn(List.of(hotel1, hotel2));
         when(hotelNodeClient.isHealthy("http://hotel-node-1:8081")).thenReturn(false);
         when(hotelNodeClient.isHealthy("http://hotel-node-2:8082")).thenReturn(true);
         HeartbeatService heartbeatService = new HeartbeatService(hotelRegistryService, hotelNodeClient);
         heartbeatService.performHeartbeatCheckForTest();
         assertThat(hotel1.isUp()).isFalse();
+        assertThat(hotel2.isUp()).isTrue();
         verify(hotelNodeClient).isHealthy("http://hotel-node-1:8081");
+        verify(hotelNodeClient).isHealthy("http://hotel-node-2:8082");
+        verify(hotelRegistryService).findAllHotels();
     }
 }
