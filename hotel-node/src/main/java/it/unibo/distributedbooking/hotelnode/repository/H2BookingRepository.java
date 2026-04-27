@@ -39,14 +39,14 @@ public class H2BookingRepository implements BookingRepository {
                 )
                 """;
         try (Connection connection = getConnection();
-        PreparedStatement statement = connection.prepareStatement(sql)) {
+             PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.execute();
         } catch (SQLException e) {
             throw new IllegalStateException("Unable to initialize H2 schema", e);
         }
     }
 
-    private void fillStatement(PreparedStatement statement, Booking booking) throws SQLException {
+    private void fillStatement(final PreparedStatement statement, final Booking booking) throws SQLException {
         statement.setString(1, booking.bookingId());
         statement.setString(2, booking.hotelId());
         statement.setString(3, booking.roomId());
@@ -56,7 +56,7 @@ public class H2BookingRepository implements BookingRepository {
         statement.setString(7, booking.status().name());
     }
 
-    private Booking mapRow(ResultSet resultSet) throws SQLException {
+    private Booking mapRow(final ResultSet resultSet) throws SQLException {
         return new Booking(
                 resultSet.getString("id"),
                 resultSet.getString("hotel_id"),
@@ -69,7 +69,7 @@ public class H2BookingRepository implements BookingRepository {
     }
 
     @Override
-    public void save(Booking booking) {
+    public void save(final Booking booking) {
         String sql = """
                 INSERT INTO bookings (id, hotel_id, room_id, customer_id, check_in_date, check_out_date, status)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -84,14 +84,14 @@ public class H2BookingRepository implements BookingRepository {
     }
 
     @Override
-    public Optional<Booking> findById(String bookingId) {
+    public Optional<Booking> findById(final String bookingId) {
         String sql = "SELECT * FROM bookings WHERE id = ?";
-
         try (Connection connection = getConnection();
-            PreparedStatement statement = connection.prepareStatement(sql)) {
+             PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, bookingId);
-            try(ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()){
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
                     return Optional.of(mapRow(resultSet));
                 }
                 return Optional.empty();
@@ -103,7 +103,7 @@ public class H2BookingRepository implements BookingRepository {
 
     @Override
     public List<Booking> findAll() {
-        String sql = "SELECT * FROM bookings";
+        String sql = "SELECT * FROM bookings ORDER BY check_in_date, id";
         List<Booking> bookings = new ArrayList<>();
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
@@ -118,11 +118,11 @@ public class H2BookingRepository implements BookingRepository {
     }
 
     @Override
-    public void update(Booking booking) {
+    public void update(final Booking booking) {
         String sql = """
-                   UPDATE bookings
-                   SET hotel_id = ?, room_id = ?, customer_id = ?, check_in_date = ?, check_out_date = ?, status = ?
-                   WHERE id = ?
+                UPDATE bookings
+                SET hotel_id = ?, room_id = ?, customer_id = ?, check_in_date = ?, check_out_date = ?, status = ?
+                WHERE id = ?
                 """;
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -133,7 +133,10 @@ public class H2BookingRepository implements BookingRepository {
             statement.setObject(5, booking.checkOutDate());
             statement.setString(6, booking.status().name());
             statement.setString(7, booking.bookingId());
-            statement.executeUpdate();
+            int updatedRows = statement.executeUpdate();
+            if (updatedRows == 0) {
+                throw new IllegalStateException("Unable to update booking: booking not found " + booking.bookingId());
+            }
         } catch (SQLException e) {
             throw new IllegalStateException("Unable to update booking", e);
         }

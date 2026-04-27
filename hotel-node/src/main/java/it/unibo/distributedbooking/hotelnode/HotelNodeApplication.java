@@ -8,6 +8,8 @@ import it.unibo.distributedbooking.hotelnode.api.HealthHttpHandler;
 import it.unibo.distributedbooking.hotelnode.api.ModifyHttpHandler;
 import it.unibo.distributedbooking.hotelnode.repository.BookingRepository;
 import it.unibo.distributedbooking.hotelnode.repository.H2BookingRepository;
+import it.unibo.distributedbooking.hotelnode.repository.H2ProcessedRequestRepository;
+import it.unibo.distributedbooking.hotelnode.repository.ProcessedRequestRepository;
 import it.unibo.distributedbooking.hotelnode.service.InMemoryBookingService;
 
 import java.io.IOException;
@@ -23,13 +25,16 @@ public class HotelNodeApplication {
     private static final String DEFAULT_HOTEL_ID = "hotel-1";
     private static final String DEFAULT_DB_DIR = "./data";
 
-    public static void main(final String[] args) throws IOException {
+    public static void main(final String[] args) {
         final int port = resolvePort();
         final String hotelId = resolveHotelId();
-        final String jdbcUrl = buildJdbcUrl(hotelId);
         try {
-            final BookingRepository repository = new H2BookingRepository(jdbcUrl);
-            final BookingService service = new InMemoryBookingService(repository);
+            final String jdbcUrl = buildJdbcUrl(hotelId);
+            final BookingRepository bookingRepository = new H2BookingRepository(jdbcUrl);
+            final ProcessedRequestRepository processedRequestRepository =
+                    new H2ProcessedRequestRepository(jdbcUrl);
+            final BookingService service =
+                    new InMemoryBookingService(bookingRepository, processedRequestRepository);
             final HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
             server.createContext("/bookings", new BookingHttpHandler(service));
             server.createContext("/bookings/cancel", new CancelHttpHandler(service));
@@ -44,6 +49,7 @@ public class HotelNodeApplication {
             System.out.println("  POST /bookings/cancel");
             System.out.println("  POST /bookings/modify");
             System.out.println("  GET  /health");
+
         } catch (SQLException | IOException e) {
             System.err.println("Failed to start hotel node '" + hotelId + "': " + e.getMessage());
             e.printStackTrace();
@@ -56,7 +62,6 @@ public class HotelNodeApplication {
         if (portValue == null || portValue.isBlank()) {
             return DEFAULT_PORT;
         }
-
         try {
             return Integer.parseInt(portValue);
         } catch (NumberFormatException e) {
@@ -76,6 +81,6 @@ public class HotelNodeApplication {
         final Path dbDir = Path.of(DEFAULT_DB_DIR);
         Files.createDirectories(dbDir);
         final String dbPath = dbDir.resolve("booking-db-" + hotelId).toAbsolutePath().toString();
-        return "jdbc:h2:file:" + dbPath + ";AUTO_SERVER=TRUE;DB_CLOSE_ON_EXIT=FALSE";
+        return "jdbc:h2:file:" + dbPath;
     }
 }

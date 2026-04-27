@@ -4,6 +4,7 @@ import it.unibo.distributedbooking.common.model.*;
 import it.unibo.distributedbooking.common.service.BookingService;
 import it.unibo.distributedbooking.hotelnode.repository.BookingRepository;
 import it.unibo.distributedbooking.hotelnode.repository.InMemoryBookingRepository;
+import it.unibo.distributedbooking.hotelnode.repository.ProcessedRequestRepository;
 
 import java.util.Map;
 import java.util.UUID;
@@ -12,22 +13,32 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InMemoryBookingService implements BookingService {
 
     private final BookingRepository bookingRepository;
-    private final Map<String, BookingResponse> responsesByRequestId  = new ConcurrentHashMap<>();
+    private final ProcessedRequestRepository processedRequestRepository;
+    private final Map<String, BookingResponse> responsesByRequestId = new ConcurrentHashMap<>();
 
     public InMemoryBookingService() {
         this.bookingRepository = new InMemoryBookingRepository();
+        this.processedRequestRepository = null;
     }
 
-    public InMemoryBookingService(BookingRepository bookingRepository) {
+    public InMemoryBookingService(final BookingRepository bookingRepository) {
         this.bookingRepository = bookingRepository;
+        this.processedRequestRepository = null;
+    }
+
+    public InMemoryBookingService(final BookingRepository bookingRepository,
+                                  final ProcessedRequestRepository processedRequestRepository) {
+        this.bookingRepository = bookingRepository;
+        this.processedRequestRepository = processedRequestRepository;
     }
 
     @Override
     public BookingResponse createBooking(final BookingRequest request) {
-        BookingResponse existingResponse = responsesByRequestId.get(request.requestId());
-        if(existingResponse != null){
+        BookingResponse existingResponse = loadExistingResponse(request.requestId());
+        if (existingResponse != null) {
             return existingResponse;
         }
+
         boolean roomAlreadyBooked = bookingRepository.findAll().stream()
                 .filter(booking -> booking.roomId().equals(request.roomId()))
                 .filter(booking -> booking.hotelId().equals(request.hotelId()))
@@ -36,8 +47,9 @@ public class InMemoryBookingService implements BookingService {
                         request.checkInDate().isBefore(booking.checkOutDate()) &&
                                 request.checkOutDate().isAfter(booking.checkInDate())
                 );
+
         BookingResponse response;
-        if(roomAlreadyBooked) {
+        if (roomAlreadyBooked) {
             response = new BookingResponse(
                     request.requestId(),
                     false,
@@ -62,19 +74,29 @@ public class InMemoryBookingService implements BookingService {
                     booking
             );
         }
-        responsesByRequestId.put(request.requestId(), response);
+
+        saveResponse(request.requestId(), response);
         return response;
     }
 
     @Override
     public BookingResponse cancelBooking(final BookingCancellationRequest request) {
-        BookingResponse existingResponse = responsesByRequestId.get(request.requestId());
+        BookingResponse existingResponse = loadExistingResponse(request.requestId());
         if (existingResponse != null) {
             return existingResponse;
         }
 
         BookingResponse response = bookingRepository.findById(request.bookingId())
                 .map(booking -> {
+                    if (booking.status() == BookingStatus.CANCELLED) {
+                        return new BookingResponse(
+                                request.requestId(),
+                                true,
+                                "Booking already cancelled.",
+                                booking
+                        );
+                    }
+
                     Booking cancelledBooking = new Booking(
                             booking.bookingId(),
                             booking.hotelId(),
@@ -95,22 +117,23 @@ public class InMemoryBookingService implements BookingService {
                     );
                 })
                 .orElseGet(() -> new BookingResponse(
-                        request.bookingId(),
+                        request.requestId(),
                         false,
                         "Booking not found",
                         null
                 ));
 
-        responsesByRequestId.put(request.requestId(), response);
+        saveResponse(request.requestId(), response);
         return response;
     }
 
     @Override
     public BookingResponse modifyBooking(final BookingModificationRequest request) {
-        BookingResponse existingResponse = responsesByRequestId.get(request.requestId());
-        if(existingResponse != null){
+        BookingResponse existingResponse = loadExistingResponse(request.requestId());
+        if (existingResponse != null) {
             return existingResponse;
         }
+
         BookingResponse response = bookingRepository.findById(request.bookingId())
                 .map(existingBooking -> {
                     if (existingBooking.status() != BookingStatus.CONFIRMED) {
@@ -121,6 +144,7 @@ public class InMemoryBookingService implements BookingService {
                                 null
                         );
                     }
+
                     boolean roomAlreadyBooked = bookingRepository.findAll().stream()
                             .filter(booking -> !booking.bookingId().equals(request.bookingId()))
                             .filter(booking -> booking.roomId().equals(request.roomId()))
@@ -130,6 +154,7 @@ public class InMemoryBookingService implements BookingService {
                                     request.checkInDate().isBefore(booking.checkOutDate()) &&
                                             request.checkOutDate().isAfter(booking.checkInDate())
                             );
+
                     if (roomAlreadyBooked) {
                         return new BookingResponse(
                                 request.requestId(),
@@ -138,6 +163,7 @@ public class InMemoryBookingService implements BookingService {
                                 null
                         );
                     }
+
                     Booking modifiedBooking = new Booking(
                             existingBooking.bookingId(),
                             request.hotelId(),
@@ -148,6 +174,7 @@ public class InMemoryBookingService implements BookingService {
                             BookingStatus.MODIFIED
                     );
                     bookingRepository.update(modifiedBooking);
+
                     return new BookingResponse(
                             request.requestId(),
                             true,
@@ -161,7 +188,32 @@ public class InMemoryBookingService implements BookingService {
                         "Booking not found",
                         null
                 ));
-        responsesByRequestId.put(request.requestId(), response);
+
+        saveResponse(request.requestId(), response);
         return response;
+    }
+
+    private BookingResponse loadExistingResponse(final String requestId) {
+        BookingResponse cachedResponse = responsesByRequestId.get(requestId);
+        if (cachedResponse != null) {
+            return cachedResponse;
+        }
+
+        if (processedRequestRepository != null) {
+            BookingResponse persistedResponse = processedRequestRepository.findByRequestId(requestId).orElse(null);
+            if (persistedResponse != null) {
+                responsesByRequestId.put(requestId, persistedResponse);
+            }
+            return persistedResponse;
+        }
+
+        return null;
+    }
+
+    private void saveResponse(final String requestId, final BookingResponse response) {
+        responsesByRequestId.put(requestId, response);
+        if (processedRequestRepository != null) {
+            processedRequestRepository.save(requestId, response);
+        }
     }
 }
