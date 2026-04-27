@@ -88,7 +88,7 @@ public class HttpHotelNodeClient implements HotelNodeClient {
         return executePost(
                 baseUrl + "/bookings/modify",
                 request,
-                request.getRequestId()
+                request.requestId()
         );
     }
 

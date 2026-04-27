@@ -29,52 +29,52 @@ public class CoordinatorApplication {
         HotelRegistryService registryService = new InMemoryHotelRegistryService();
         InMemoryBookingLocatorService bookingLocatorService = new InMemoryBookingLocatorService();
         HotelNodeClient hotelNodeClient = new HttpHotelNodeClient();
+
         registryService.registerHotel(new HotelNodeInfo("hotel-1", "localhost", 8081));
         registryService.registerHotel(new HotelNodeInfo("hotel-2", "localhost", 8082));
+
         BookingCoordinatorService coordinatorService = new BookingCoordinatorService(
                 registryService,
                 hotelNodeClient,
                 bookingLocatorService
         );
+
         HeartbeatService heartbeatService = new HeartbeatService(
                 registryService,
                 hotelNodeClient
         );
+
         HttpServer server = HttpServer.create(new InetSocketAddress(COORDINATOR_PORT), 0);
-        server.createContext("/bookings", new BookingHttpHandler(coordinatorService));
+        server.createContext("/bookings", new BookingHttpHandler(coordinatorService, bookingLocatorService));
         server.createContext("/cancellations", new CancelHttpHandler(coordinatorService));
         server.createContext("/bookings/modify", new ModifyHttpHandler(coordinatorService));
         server.createContext("/hotels", new HotelsHttpHandler(registryService));
+
         ExecutorService executor = Executors.newCachedThreadPool();
         server.setExecutor(executor);
+
         heartbeatService.start();
         server.start();
-        System.out.println("=== Distributed Hotel Booking Coordinator ===");
-        System.out.println("Listening on http://localhost:" + COORDINATOR_PORT);
-        System.out.println("Registered hotels:");
-        registryService.findAllHotels().forEach(hotel ->
-                System.out.println("  " + hotel.getHotelId() + " -> " + hotel.getHost() + ":" + hotel.getPort())
-        );
+
+        System.out.println("Coordinator listening on port " + COORDINATOR_PORT);
         System.out.println("Endpoints:");
         System.out.println("  POST /bookings");
+        System.out.println("  GET  /bookings");
         System.out.println("  POST /cancellations");
         System.out.println("  POST /bookings/modify");
         System.out.println("  GET  /hotels");
+
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("\n=== Coordinator shutdown initiated ===");
+            System.out.println("Stopping coordinator...");
+            heartbeatService.stop();
+            server.stop(0);
+            executor.shutdown();
             try {
-                heartbeatService.stop();
-                server.stop(0);
-                executor.shutdown();
-                if (executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                    System.out.println("Executor terminated gracefully");
-                } else {
-                    System.out.println("Force stopping executor...");
+                if (!executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
                     executor.shutdownNow();
                 }
-                System.out.println("Coordinator stopped cleanly");
             } catch (InterruptedException e) {
-                System.out.println("Shutdown interrupted: " + e.getMessage());
+                executor.shutdownNow();
                 Thread.currentThread().interrupt();
             }
         }));

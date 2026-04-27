@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import it.unibo.distributedbooking.common.model.Booking;
 import it.unibo.distributedbooking.common.model.BookingCancellationRequest;
 import it.unibo.distributedbooking.common.model.BookingModificationRequest;
 import it.unibo.distributedbooking.common.model.BookingRequest;
@@ -40,9 +41,6 @@ public class CoordinatorClient {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-            System.out.println("STATUS = " + response.statusCode());
-            System.out.println("BODY = " + response.body());
-
             if (response.statusCode() != 200) {
                 throw new RuntimeException("Failed to fetch hotels: HTTP " + response.statusCode());
             }
@@ -54,6 +52,29 @@ public class CoordinatorClient {
         } catch (IOException | InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Failed to fetch hotels", e);
+        }
+    }
+
+    public List<Booking> fetchBookings() {
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(baseUrl + "/bookings"))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Failed to fetch bookings: HTTP " + response.statusCode());
+            }
+
+            return objectMapper.readValue(
+                    response.body(),
+                    new TypeReference<List<Booking>>() {}
+            );
+        } catch (IOException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Failed to fetch bookings", e);
         }
     }
 

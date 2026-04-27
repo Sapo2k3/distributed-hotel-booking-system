@@ -1,10 +1,6 @@
 package it.unibo.distributedbooking.coordinator.service;
 
-import it.unibo.distributedbooking.common.model.Booking;
-import it.unibo.distributedbooking.common.model.BookingCancellationRequest;
-import it.unibo.distributedbooking.common.model.BookingModificationRequest;
-import it.unibo.distributedbooking.common.model.BookingRequest;
-import it.unibo.distributedbooking.common.model.BookingResponse;
+import it.unibo.distributedbooking.common.model.*;
 import it.unibo.distributedbooking.coordinator.client.HotelNodeClient;
 import it.unibo.distributedbooking.coordinator.model.HotelNodeInfo;
 import org.junit.jupiter.api.BeforeEach;
@@ -131,20 +127,41 @@ class BookingCoordinatorServiceTest {
                 LocalDate.of(2026, 4, 12),
                 null
         );
+        Booking cancelledBooking = new Booking(
+                "booking-1",
+                "hotel-1",
+                "room-101",
+                "customer-1",
+                LocalDate.of(2026, 4, 10),
+                LocalDate.of(2026, 4, 12),
+                BookingStatus.CANCELLED
+        );
         HotelNodeInfo hotelNode = new HotelNodeInfo("hotel-1", "localhost", 8081);
-        when(locatorService.findByBookingId("booking-1")).thenReturn(Optional.of(booking));
-        when(hotelRegistryService.findHotelById("hotel-1")).thenReturn(Optional.of(hotelNode));
-        when(hotelNodeClient.isHealthy("http://localhost:8081")).thenReturn(true);
-        BookingResponse expectedResponse = new BookingResponse(
+        when(locatorService.findByBookingId("booking-1"))
+                .thenReturn(Optional.of(booking), Optional.of(cancelledBooking));
+        when(hotelRegistryService.findHotelById("hotel-1"))
+                .thenReturn(Optional.of(hotelNode));
+        when(hotelNodeClient.isHealthy("http://localhost:8081"))
+                .thenReturn(true);
+        BookingResponse nodeResponse = new BookingResponse(
                 "req-cancel-1",
                 true,
                 "Booking cancelled successfully",
                 null
         );
-        when(hotelNodeClient.cancelBooking("http://localhost:8081", request)).thenReturn(expectedResponse);
+        when(hotelNodeClient.cancelBooking("http://localhost:8081", request))
+                .thenReturn(nodeResponse);
         BookingResponse response = coordinatorService.coordinateCancellation(request);
+        BookingResponse expectedResponse = new BookingResponse(
+                "req-cancel-1",
+                true,
+                "Booking cancelled successfully",
+                cancelledBooking
+        );
         assertThat(response).isEqualTo(expectedResponse);
-        verify(locatorService).findByBookingId("booking-1");
+        verify(locatorService, times(2)).findByBookingId("booking-1");
+        verify(locatorService).markCancelled("booking-1");
+        verify(hotelRegistryService).findHotelById("hotel-1");
         verify(hotelNodeClient).isHealthy("http://localhost:8081");
         verify(hotelNodeClient).cancelBooking("http://localhost:8081", request);
         verifyNoMoreInteractions(hotelNodeClient, locatorService, hotelRegistryService);

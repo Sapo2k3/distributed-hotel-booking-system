@@ -4,7 +4,8 @@ import it.unibo.distributedbooking.common.model.Booking;
 import it.unibo.distributedbooking.common.model.BookingStatus;
 
 import java.time.LocalDate;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,7 +33,32 @@ public class InMemoryBookingLocatorService implements BookingLocatorService {
     }
 
     @Override
-    public Optional<Booking> findByBookingId(String bookingId) {
+    public Optional<Booking> findByBookingId(final String bookingId) {
         return Optional.ofNullable(bookingsById.get(bookingId));
+    }
+
+    @Override
+    public List<Booking> findAllBookings() {
+        return new ArrayList<>(bookingsById.values());
+    }
+
+    @Override
+    public void updateBooking(final Booking booking) {
+        if (booking != null && booking.bookingId() != null) {
+            bookingsById.put(booking.bookingId(), booking);
+        }
+    }
+
+    @Override
+    public void markCancelled(final String bookingId) {
+        bookingsById.computeIfPresent(bookingId, (id, existingBooking) -> new Booking(
+                existingBooking.bookingId(),
+                existingBooking.hotelId(),
+                existingBooking.roomId(),
+                existingBooking.customerId(),
+                existingBooking.checkInDate(),
+                existingBooking.checkOutDate(),
+                BookingStatus.CANCELLED
+        ));
     }
 }

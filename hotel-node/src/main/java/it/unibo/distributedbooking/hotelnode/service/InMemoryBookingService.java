@@ -107,32 +107,32 @@ public class InMemoryBookingService implements BookingService {
 
     @Override
     public BookingResponse modifyBooking(final BookingModificationRequest request) {
-        BookingResponse existingResponse = responsesByRequestId.get(request.getRequestId());
+        BookingResponse existingResponse = responsesByRequestId.get(request.requestId());
         if(existingResponse != null){
             return existingResponse;
         }
-        BookingResponse response = bookingRepository.findById(request.getBookingId())
+        BookingResponse response = bookingRepository.findById(request.bookingId())
                 .map(existingBooking -> {
                     if (existingBooking.status() != BookingStatus.CONFIRMED) {
                         return new BookingResponse(
-                                request.getRequestId(),
+                                request.requestId(),
                                 false,
                                 "Only confirmed bookings can be modified",
                                 null
                         );
                     }
                     boolean roomAlreadyBooked = bookingRepository.findAll().stream()
-                            .filter(booking -> !booking.bookingId().equals(request.getBookingId()))
-                            .filter(booking -> booking.roomId().equals(request.getRoomId()))
-                            .filter(booking -> booking.hotelId().equals(request.getHotelId()))
+                            .filter(booking -> !booking.bookingId().equals(request.bookingId()))
+                            .filter(booking -> booking.roomId().equals(request.roomId()))
+                            .filter(booking -> booking.hotelId().equals(request.hotelId()))
                             .filter(booking -> booking.status() == BookingStatus.CONFIRMED)
                             .anyMatch(booking ->
-                                    request.getCheckInDate().isBefore(booking.checkOutDate()) &&
-                                            request.getCheckOutDate().isAfter(booking.checkInDate())
+                                    request.checkInDate().isBefore(booking.checkOutDate()) &&
+                                            request.checkOutDate().isAfter(booking.checkInDate())
                             );
                     if (roomAlreadyBooked) {
                         return new BookingResponse(
-                                request.getRequestId(),
+                                request.requestId(),
                                 false,
                                 "Room is not available for the selected dates",
                                 null
@@ -140,28 +140,28 @@ public class InMemoryBookingService implements BookingService {
                     }
                     Booking modifiedBooking = new Booking(
                             existingBooking.bookingId(),
-                            request.getHotelId(),
-                            request.getRoomId(),
-                            request.getCustomerId(),
-                            request.getCheckInDate(),
-                            request.getCheckOutDate(),
+                            request.hotelId(),
+                            request.roomId(),
+                            request.customerId(),
+                            request.checkInDate(),
+                            request.checkOutDate(),
                             BookingStatus.MODIFIED
                     );
                     bookingRepository.update(modifiedBooking);
                     return new BookingResponse(
-                            request.getRequestId(),
+                            request.requestId(),
                             true,
                             "Booking modified successfully",
                             modifiedBooking
                     );
                 })
                 .orElseGet(() -> new BookingResponse(
-                        request.getRequestId(),
+                        request.requestId(),
                         false,
                         "Booking not found",
                         null
                 ));
-        responsesByRequestId.put(request.getRequestId(), response);
+        responsesByRequestId.put(request.requestId(), response);
         return response;
     }
 }

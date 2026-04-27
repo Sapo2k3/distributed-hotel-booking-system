@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: it.unibo.distributedbooking.hotelnode.repository.H2BookingRepositoryTest
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.626 s -- in it.unibo.distributedbooking.hotelnode.repository.H2BookingRepositoryTest
