@@ -92,5 +92,4 @@ public class BookingReplicaService {
     private String buildBaseUrl(final HotelNodeInfo hotelNodeInfo) {
         return "http://" + hotelNodeInfo.getHost() + ":" + hotelNodeInfo.getPort();
     }
-
 }
