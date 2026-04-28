@@ -1,3 +1,4 @@
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/test/java/it/unibo/distributedbooking/coordinator/api/CoordinatorHttpIntegrationTest.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/test/java/it/unibo/distributedbooking/coordinator/heartbeat/HeartbeatServiceTest.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/test/java/it/unibo/distributedbooking/coordinator/service/BookingCoordinatorServiceTest.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/test/java/it/unibo/distributedbooking/coordinator/service/InMemoryHotelRegistryServiceTest.java

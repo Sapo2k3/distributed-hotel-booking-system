@@ -22,16 +22,25 @@ import java.util.concurrent.TimeUnit;
 
 public class CoordinatorApplication {
 
-    private static final int COORDINATOR_PORT = 8080;
+    private static final int DEFAULT_COORDINATOR_PORT = 8080;
     private static final int SHUTDOWN_TIMEOUT_SECONDS = 5;
 
+    private static final String DEFAULT_HOTEL_1_ID = "hotel-1";
+    private static final String DEFAULT_HOTEL_1_HOST = "localhost";
+    private static final int DEFAULT_HOTEL_1_PORT = 8081;
+
+    private static final String DEFAULT_HOTEL_2_ID = "hotel-2";
+    private static final String DEFAULT_HOTEL_2_HOST = "localhost";
+    private static final int DEFAULT_HOTEL_2_PORT = 8082;
+
     public static void main(String[] args) throws IOException {
+        final int coordinatorPort = resolveIntEnv("COORDINATOR_PORT", DEFAULT_COORDINATOR_PORT);
+
         HotelRegistryService registryService = new InMemoryHotelRegistryService();
         InMemoryBookingLocatorService bookingLocatorService = new InMemoryBookingLocatorService();
         HotelNodeClient hotelNodeClient = new HttpHotelNodeClient();
 
-        registryService.registerHotel(new HotelNodeInfo("hotel-1", "localhost", 8081));
-        registryService.registerHotel(new HotelNodeInfo("hotel-2", "localhost", 8082));
+        registerConfiguredHotels(registryService);
 
         BookingCoordinatorService coordinatorService = new BookingCoordinatorService(
                 registryService,
@@ -44,7 +53,7 @@ public class CoordinatorApplication {
                 hotelNodeClient
         );
 
-        HttpServer server = HttpServer.create(new InetSocketAddress(COORDINATOR_PORT), 0);
+        HttpServer server = HttpServer.create(new InetSocketAddress(coordinatorPort), 0);
         server.createContext("/bookings", new BookingHttpHandler(coordinatorService, bookingLocatorService));
         server.createContext("/cancellations", new CancelHttpHandler(coordinatorService));
         server.createContext("/bookings/modify", new ModifyHttpHandler(coordinatorService));
@@ -56,7 +65,10 @@ public class CoordinatorApplication {
         heartbeatService.start();
         server.start();
 
-        System.out.println("Coordinator listening on port " + COORDINATOR_PORT);
+        System.out.println("Coordinator listening on port " + coordinatorPort);
+        System.out.println("Registered hotels:");
+        registryService.findAllHotels().forEach(hotel ->
+                System.out.println("  - " + hotel.getHotelId() + " -> " + hotel.getHost() + ":" + hotel.getPort()));
         System.out.println("Endpoints:");
         System.out.println("  POST /bookings");
         System.out.println("  GET  /bookings");
@@ -78,5 +90,39 @@ public class CoordinatorApplication {
                 Thread.currentThread().interrupt();
             }
         }));
+    }
+
+    private static void registerConfiguredHotels(final HotelRegistryService registryService) {
+        registryService.registerHotel(new HotelNodeInfo(
+                resolveStringEnv("HOTEL_1_ID", DEFAULT_HOTEL_1_ID),
+                resolveStringEnv("HOTEL_1_HOST", DEFAULT_HOTEL_1_HOST),
+                resolveIntEnv("HOTEL_1_PORT", DEFAULT_HOTEL_1_PORT)
+        ));
+
+        registryService.registerHotel(new HotelNodeInfo(
+                resolveStringEnv("HOTEL_2_ID", DEFAULT_HOTEL_2_ID),
+                resolveStringEnv("HOTEL_2_HOST", DEFAULT_HOTEL_2_HOST),
+                resolveIntEnv("HOTEL_2_PORT", DEFAULT_HOTEL_2_PORT)
+        ));
+    }
+
+    private static String resolveStringEnv(final String envName, final String defaultValue) {
+        final String value = System.getenv(envName);
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        return value;
+    }
+
+    private static int resolveIntEnv(final String envName, final int defaultValue) {
+        final String value = System.getenv(envName);
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid value for " + envName + ": " + value, e);
+        }
     }
 }

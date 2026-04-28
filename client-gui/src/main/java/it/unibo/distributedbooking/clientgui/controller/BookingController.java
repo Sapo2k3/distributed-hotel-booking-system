@@ -15,6 +15,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
@@ -57,6 +58,8 @@ public class BookingController {
     private static final String STATUS_CANCELLED = "CANCELLED";
     private static final String STATUS_CONFIRMED = "CONFIRMED";
     private static final String STATUS_MODIFIED = "MODIFIED";
+    private static final String STATUS_UP = "UP";
+    private static final String STATUS_DOWN = "DOWN";
 
     private final CoordinatorClient coordinatorClient = new CoordinatorClient("http://localhost:8080");
 
@@ -66,6 +69,7 @@ public class BookingController {
         hostCol.setCellValueFactory(new PropertyValueFactory<>("host"));
         portCol.setCellValueFactory(new PropertyValueFactory<>("port"));
         statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
+
         bookingIdBookingCol.setCellValueFactory(new PropertyValueFactory<>("bookingId"));
         hotelIdBookingCol.setCellValueFactory(new PropertyValueFactory<>("hotelId"));
         roomIdBookingCol.setCellValueFactory(new PropertyValueFactory<>("roomId"));
@@ -73,8 +77,13 @@ public class BookingController {
         checkInBookingCol.setCellValueFactory(new PropertyValueFactory<>("checkInDate"));
         checkOutBookingCol.setCellValueFactory(new PropertyValueFactory<>("checkOutDate"));
         statusBookingCol.setCellValueFactory(new PropertyValueFactory<>("status"));
+
+        configureHotelTableRendering();
+        configureBookingTableRendering();
+
         checkInDatePicker.setValue(LocalDate.now().plusDays(1));
         checkOutDatePicker.setValue(LocalDate.now().plusDays(2));
+
         bookingTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, selectedBooking) -> {
             if (selectedBooking != null) {
                 populateFormFromSelectedBooking(selectedBooking);
@@ -83,21 +92,6 @@ public class BookingController {
             updateActionButtonsState();
         });
 
-        bookingTable.setRowFactory(table -> new TableRow<>() {
-            @Override
-            protected void updateItem(final BookingViewModel item, final boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setStyle("");
-                } else if (STATUS_CANCELLED.equalsIgnoreCase(item.getStatus())) {
-                    setStyle("-fx-background-color: #f4f4f4; -fx-text-fill: #888888;");
-                } else if (STATUS_MODIFIED.equalsIgnoreCase(item.getStatus())) {
-                    setStyle("-fx-background-color: #fff8e1;");
-                } else {
-                    setStyle("");
-                }
-            }
-        });
         updateActionButtonsState();
         refreshAllData();
     }
@@ -110,6 +104,7 @@ public class BookingController {
             final String customerId = normalize(customerField.getText());
             final LocalDate checkIn = checkInDatePicker.getValue();
             final LocalDate checkOut = checkOutDatePicker.getValue();
+
             if (selectedHotel == null || selectedHotel.isBlank()) {
                 statusLabel.setText("Please select a hotel.");
                 return;
@@ -130,6 +125,7 @@ public class BookingController {
                 statusLabel.setText("Check-out date must be after check-in.");
                 return;
             }
+
             final BookingRequest request = new BookingRequest(
                     "gui-book-" + System.currentTimeMillis(),
                     selectedHotel,
@@ -138,11 +134,14 @@ public class BookingController {
                     checkIn,
                     checkOut
             );
+
             final BookingResponse response = coordinatorClient.createBooking(request);
             statusLabel.setText(response.message());
+
             if (response.success() && response.booking() != null) {
                 applyBookingToForm(response.booking());
             }
+
             refreshAllDataSilently();
         } catch (Exception e) {
             statusLabel.setText("Booking failed: " + rootMessage(e));
@@ -157,20 +156,25 @@ public class BookingController {
                 statusLabel.setText("Selected booking is already cancelled.");
                 return;
             }
+
             final String bookingId = resolveSelectedOrTypedBookingId();
             if (bookingId == null || bookingId.isBlank()) {
                 statusLabel.setText("Please enter or select a booking ID.");
                 return;
             }
+
             final BookingCancellationRequest request = new BookingCancellationRequest(
                     "gui-cancel-" + System.currentTimeMillis(),
                     bookingId
             );
+
             final BookingResponse response = coordinatorClient.cancelBooking(request);
             statusLabel.setText(response.message());
+
             if (response.success() && response.booking() != null) {
                 applyBookingToForm(response.booking());
             }
+
             refreshAllDataSilently();
         } catch (Exception e) {
             statusLabel.setText("Cancellation failed: " + rootMessage(e));
@@ -189,12 +193,14 @@ public class BookingController {
                 statusLabel.setText("Only confirmed bookings can be modified.");
                 return;
             }
+
             final String bookingId = resolveSelectedOrTypedBookingId();
             final String selectedHotel = hotelCombo.getValue();
             final String roomId = normalize(roomField.getText());
             final String customerId = normalize(customerField.getText());
             final LocalDate checkIn = checkInDatePicker.getValue();
             final LocalDate checkOut = checkOutDatePicker.getValue();
+
             if (bookingId == null || bookingId.isBlank()) {
                 statusLabel.setText("Please enter or select a booking ID.");
                 return;
@@ -219,6 +225,7 @@ public class BookingController {
                 statusLabel.setText("Check-out date must be after check-in.");
                 return;
             }
+
             final BookingModificationRequest request = new BookingModificationRequest(
                     "gui-modify-" + System.currentTimeMillis(),
                     bookingId,
@@ -228,11 +235,14 @@ public class BookingController {
                     checkIn,
                     checkOut
             );
+
             final BookingResponse response = coordinatorClient.modifyBooking(request);
             statusLabel.setText(response.message());
+
             if (response.success() && response.booking() != null) {
                 applyBookingToForm(response.booking());
             }
+
             refreshAllDataSilently();
         } catch (Exception e) {
             statusLabel.setText("Modify failed: " + rootMessage(e));
@@ -252,8 +262,10 @@ public class BookingController {
     private void refreshAllData() {
         final List<HotelNodeInfo> hotels = coordinatorClient.fetchHotels();
         applyHotelsToUi(hotels);
+
         final List<Booking> bookings = coordinatorClient.fetchBookings();
         applyBookingsToUi(bookings);
+
         updateActionButtonsState();
     }
 
@@ -269,19 +281,22 @@ public class BookingController {
         final List<String> hotelIds = hotels.stream()
                 .map(HotelNodeInfo::getHotelId)
                 .toList();
+
         hotelCombo.setItems(FXCollections.observableArrayList(hotelIds));
+
         if (currentSelection != null && hotelIds.contains(currentSelection)) {
             hotelCombo.setValue(currentSelection);
         } else if (!hotelIds.isEmpty() && hotelCombo.getValue() == null) {
             hotelCombo.setValue(hotelIds.get(0));
         }
+
         hotelTable.setItems(FXCollections.observableArrayList(
                 hotels.stream()
                         .map(hotel -> new HotelViewModel(
                                 hotel.getHotelId(),
                                 hotel.getHost(),
                                 String.valueOf(hotel.getPort()),
-                                hotel.isUp() ? "UP" : "DOWN"
+                                hotel.isUp() ? STATUS_UP : STATUS_DOWN
                         ))
                         .toList()
         ));
@@ -289,6 +304,7 @@ public class BookingController {
 
     private void applyBookingsToUi(final List<Booking> bookings) {
         final String selectedBookingId = resolveSelectedOrTypedBookingId();
+
         bookingTable.setItems(FXCollections.observableArrayList(
                 bookings.stream()
                         .map(booking -> new BookingViewModel(
@@ -302,6 +318,7 @@ public class BookingController {
                         ))
                         .toList()
         ));
+
         if (selectedBookingId != null && !selectedBookingId.isBlank()) {
             bookingTable.getItems().stream()
                     .filter(item -> selectedBookingId.equals(item.getBookingId()))
@@ -320,6 +337,7 @@ public class BookingController {
         hotelCombo.setValue(selectedBooking.getHotelId());
         roomField.setText(selectedBooking.getRoomId());
         customerField.setText(selectedBooking.getCustomerId());
+
         if (selectedBooking.getCheckInDate() != null && !selectedBooking.getCheckInDate().isBlank()) {
             checkInDatePicker.setValue(LocalDate.parse(selectedBooking.getCheckInDate()));
         }
@@ -343,6 +361,7 @@ public class BookingController {
         final String status = hasSelection ? selectedBooking.getStatus() : null;
         final boolean isCancelled = hasSelection && STATUS_CANCELLED.equalsIgnoreCase(status);
         final boolean isConfirmed = hasSelection && STATUS_CONFIRMED.equalsIgnoreCase(status);
+
         cancelButton.setDisable(!hasSelection || isCancelled);
         modifyButton.setDisable(!hasSelection || !isConfirmed);
         bookButton.setDisable(false);
@@ -351,6 +370,7 @@ public class BookingController {
     private String buildSelectionMessage(final BookingViewModel selectedBooking) {
         final String bookingId = selectedBooking.getBookingId();
         final String status = selectedBooking.getStatus();
+
         if (STATUS_CANCELLED.equalsIgnoreCase(status)) {
             return "Selected booking " + bookingId + " is CANCELLED. Modify and Cancel are disabled.";
         }
@@ -385,5 +405,59 @@ public class BookingController {
             current = current.getCause();
         }
         return current.getMessage() != null ? current.getMessage() : exception.getMessage();
+    }
+
+    private void configureHotelTableRendering() {
+        statusCol.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(final String item, final boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else if (STATUS_UP.equalsIgnoreCase(item)) {
+                    setText("UP");
+                    setStyle("-fx-text-fill: #1e8449; -fx-font-weight: bold;");
+                } else if (STATUS_DOWN.equalsIgnoreCase(item)) {
+                    setText("DOWN");
+                    setStyle("-fx-text-fill: #c0392b; -fx-font-weight: bold;");
+                } else {
+                    setText(item);
+                    setStyle("");
+                }
+            }
+        });
+
+        hotelTable.setRowFactory(table -> new TableRow<>() {
+            @Override
+            protected void updateItem(final HotelViewModel item, final boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setStyle("");
+                } else if (STATUS_DOWN.equalsIgnoreCase(item.getStatus())) {
+                    setStyle("-fx-background-color: #fdecea;");
+                } else {
+                    setStyle("");
+                }
+            }
+        });
+    }
+
+    private void configureBookingTableRendering() {
+        bookingTable.setRowFactory(table -> new TableRow<>() {
+            @Override
+            protected void updateItem(final BookingViewModel item, final boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setStyle("");
+                } else if (STATUS_CANCELLED.equalsIgnoreCase(item.getStatus())) {
+                    setStyle("-fx-background-color: #f4f4f4; -fx-text-fill: #888888;");
+                } else if (STATUS_MODIFIED.equalsIgnoreCase(item.getStatus())) {
+                    setStyle("-fx-background-color: #fff8e1;");
+                } else {
+                    setStyle("");
+                }
+            }
+        });
     }
 }

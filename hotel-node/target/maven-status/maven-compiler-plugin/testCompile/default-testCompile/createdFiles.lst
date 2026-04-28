@@ -1,2 +1,4 @@
+it/unibo/distributedbooking/hotelnode/service/InMemoryBookingServiceIdempotencyTest.class
+it/unibo/distributedbooking/hotelnode/repository/H2ProcessedRequestRepositoryTest.class
 it/unibo/distributedbooking/hotelnode/repository/H2BookingRepositoryTest.class
 it/unibo/distributedbooking/hotelnode/service/InMemoryBookingServiceTest.class

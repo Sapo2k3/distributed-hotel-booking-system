@@ -1,0 +1,6 @@
+client-gui/
+integration-tests/
+*.iml
+.idea/
+target/
+.DS_Store

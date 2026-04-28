@@ -2,6 +2,8 @@ it/unibo/distributedbooking/clientgui/model/HotelViewModel.class
 it/unibo/distributedbooking/clientgui/service/CoordinatorClient$1.class
 it/unibo/distributedbooking/clientgui/MainApp.class
 it/unibo/distributedbooking/clientgui/controller/BookingController$1.class
+it/unibo/distributedbooking/clientgui/controller/BookingController$3.class
+it/unibo/distributedbooking/clientgui/controller/BookingController$2.class
 it/unibo/distributedbooking/clientgui/model/BookingViewModel.class
 it/unibo/distributedbooking/clientgui/service/CoordinatorClient.class
 it/unibo/distributedbooking/clientgui/controller/BookingController.class

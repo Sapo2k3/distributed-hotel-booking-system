@@ -4,91 +4,132 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox fx:controller="it.unibo.distributedbooking.clientgui.controller.BookingController"
-      xmlns="http://javafx.com/javafx/21.0.1" xmlns:fx="http://javafx.com/fxml/1"
-      spacing="18" prefWidth="1100" prefHeight="820">
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="it.unibo.distributedbooking.clientgui.controller.BookingController"
+      spacing="20.0">
+
     <children>
-        <HBox spacing="12" alignment="CENTER_LEFT">
+        <HBox alignment="CENTER_LEFT" spacing="20.0">
             <children>
-                <Label text="Distributed Hotel Booking" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Button fx:id="refreshButton" onAction="#refreshHotels" text="Refresh Data" />
+                <Label text="Distributed Hotel Booking System"
+                       style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+
+                <Region HBox.hgrow="ALWAYS" />
+
+                <Button fx:id="bookButton"
+                        mnemonicParsing="false"
+                        onAction="#bookRoom"
+                        style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold;"
+                        text="📅 BOOK ROOM" />
+
+                <Button fx:id="cancelButton"
+                        mnemonicParsing="false"
+                        onAction="#cancelBooking"
+                        style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;"
+                        text="CANCEL" />
+
+                <Button fx:id="modifyButton"
+                        mnemonicParsing="false"
+                        onAction="#modifyBooking"
+                        style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold;"
+                        text="✏ MODIFY" />
+
+                <Button mnemonicParsing="false"
+                        onAction="#refreshHotels"
+                        style="-fx-background-color: #3498db; -fx-text-fill: white;"
+                        text="REFRESH" />
             </children>
         </HBox>
 
-        <GridPane hgap="12" vgap="12">
-            <columnConstraints>
-                <ColumnConstraints minWidth="70"/>
-                <ColumnConstraints hgrow="ALWAYS" prefWidth="200"/>
-                <ColumnConstraints minWidth="70"/>
-                <ColumnConstraints hgrow="ALWAYS" prefWidth="200"/>
-                <ColumnConstraints minWidth="70"/>
-                <ColumnConstraints hgrow="ALWAYS" prefWidth="200"/>
-            </columnConstraints>
-            <children>
-                <Label text="Hotel:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
-                <ComboBox fx:id="hotelCombo" prefWidth="180" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+        <Label fx:id="statusLabel"
+               text="Ready"
+               style="-fx-font-size: 14px; -fx-text-fill: #7f8c8d; -fx-padding: 10 0 10 0;" />
 
-                <Label text="Room:" GridPane.rowIndex="0" GridPane.columnIndex="2" />
-                <TextField fx:id="roomField" prefWidth="120" GridPane.rowIndex="0" GridPane.columnIndex="3" />
+        <Separator />
 
-                <Label text="Customer:" GridPane.rowIndex="0" GridPane.columnIndex="4" />
-                <TextField fx:id="customerField" prefWidth="180" GridPane.rowIndex="0" GridPane.columnIndex="5" />
+        <TitledPane animated="false" expanded="true" text="Select Hotel" style="-fx-font-weight: bold;">
+            <content>
+                <VBox spacing="12.0">
+                    <ComboBox fx:id="hotelCombo"
+                              prefWidth="320.0"
+                              promptText="Select hotel..." />
 
-                <Label text="Check-in:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
-                <DatePicker fx:id="checkInDatePicker" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                    <TableView fx:id="hotelTable"
+                               prefHeight="180.0"
+                               minHeight="180.0">
+                        <columns>
+                            <TableColumn fx:id="hotelIdCol" prefWidth="180.0" text="Hotel ID" />
+                            <TableColumn fx:id="hostCol" prefWidth="240.0" text="Host" />
+                            <TableColumn fx:id="portCol" prefWidth="90.0" text="Port" />
+                            <TableColumn fx:id="statusCol" prefWidth="120.0" text="Status" />
+                        </columns>
+                    </TableView>
+                </VBox>
+            </content>
+        </TitledPane>
 
-                <Label text="Check-out:" GridPane.rowIndex="1" GridPane.columnIndex="2" />
-                <DatePicker fx:id="checkOutDatePicker" GridPane.rowIndex="1" GridPane.columnIndex="3" />
+        <TitledPane animated="false" expanded="true" text="Booking Details" style="-fx-font-weight: bold;">
+            <content>
+                <GridPane hgap="15.0" vgap="10.0">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="120.0" prefWidth="140.0" />
+                        <ColumnConstraints minWidth="240.0" prefWidth="320.0" hgrow="ALWAYS" />
+                    </columnConstraints>
 
-                <HBox spacing="10" GridPane.rowIndex="1" GridPane.columnIndex="5" alignment="CENTER_RIGHT">
                     <children>
-                        <Button fx:id="bookButton" onAction="#bookRoom" text="Book Room" />
-                        <Button fx:id="cancelButton" onAction="#cancelBooking" text="Cancel" />
-                        <Button fx:id="modifyButton" onAction="#modifyBooking" text="Modify" />
+                        <Label text="Booking ID:" GridPane.rowIndex="0" />
+                        <TextField fx:id="bookingIdField"
+                                   promptText="Auto-generated on create"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="0" />
+
+                        <Label text="Room ID:" GridPane.rowIndex="1" />
+                        <TextField fx:id="roomField"
+                                   promptText="e.g. room-101"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="1" />
+
+                        <Label text="Customer ID:" GridPane.rowIndex="2" />
+                        <TextField fx:id="customerField"
+                                   promptText="e.g. cust-123"
+                                   GridPane.columnIndex="1"
+                                   GridPane.rowIndex="2" />
+
+                        <Label text="Check-in:" GridPane.rowIndex="3" />
+                        <DatePicker fx:id="checkInDatePicker"
+                                    GridPane.columnIndex="1"
+                                    GridPane.rowIndex="3" />
+
+                        <Label text="Check-out:" GridPane.rowIndex="4" />
+                        <DatePicker fx:id="checkOutDatePicker"
+                                    GridPane.columnIndex="1"
+                                    GridPane.rowIndex="4" />
                     </children>
-                </HBox>
+                </GridPane>
+            </content>
+        </TitledPane>
 
-                <Label text="Booking ID:" GridPane.rowIndex="2" GridPane.columnIndex="0" />
-                <TextField fx:id="bookingIdField"
-                           prefWidth="240"
-                           GridPane.rowIndex="2"
-                           GridPane.columnIndex="1"
-                           GridPane.columnSpan="3" />
-            </children>
-        </GridPane>
+        <Separator />
 
-        <TitledPane text="Hotels" expanded="true">
+        <TitledPane animated="false" expanded="true" text="All Bookings" style="-fx-font-weight: bold;">
             <content>
-                <TableView fx:id="hotelTable" prefHeight="220">
+                <TableView fx:id="bookingTable"
+                           prefHeight="260.0">
                     <columns>
-                        <TableColumn fx:id="hotelIdCol" prefWidth="160" text="Hotel ID" />
-                        <TableColumn fx:id="hostCol" prefWidth="260" text="Host" />
-                        <TableColumn fx:id="portCol" prefWidth="120" text="Port" />
-                        <TableColumn fx:id="statusCol" prefWidth="120" text="Status" />
+                        <TableColumn fx:id="bookingIdBookingCol" minWidth="120.0" prefWidth="160.0" text="Booking ID" />
+                        <TableColumn fx:id="hotelIdBookingCol" minWidth="90.0" prefWidth="100.0" text="Hotel" />
+                        <TableColumn fx:id="roomIdBookingCol" minWidth="80.0" prefWidth="90.0" text="Room" />
+                        <TableColumn fx:id="customerIdBookingCol" minWidth="120.0" prefWidth="140.0" text="Customer" />
+                        <TableColumn fx:id="checkInBookingCol" minWidth="100.0" prefWidth="110.0" text="Check-in" />
+                        <TableColumn fx:id="checkOutBookingCol" minWidth="100.0" prefWidth="110.0" text="Check-out" />
+                        <TableColumn fx:id="statusBookingCol" minWidth="100.0" prefWidth="120.0" text="Status" />
                     </columns>
                 </TableView>
             </content>
         </TitledPane>
-
-        <TitledPane text="Bookings" expanded="true">
-            <content>
-                <TableView fx:id="bookingTable" prefHeight="260">
-                    <columns>
-                        <TableColumn fx:id="bookingIdBookingCol" prefWidth="180" text="Booking ID" />
-                        <TableColumn fx:id="hotelIdBookingCol" prefWidth="120" text="Hotel ID" />
-                        <TableColumn fx:id="roomIdBookingCol" prefWidth="120" text="Room ID" />
-                        <TableColumn fx:id="customerIdBookingCol" prefWidth="140" text="Customer ID" />
-                        <TableColumn fx:id="checkInBookingCol" prefWidth="120" text="Check-in" />
-                        <TableColumn fx:id="checkOutBookingCol" prefWidth="120" text="Check-out" />
-                        <TableColumn fx:id="statusBookingCol" prefWidth="120" text="Status" />
-                    </columns>
-                </TableView>
-            </content>
-        </TitledPane>
-
-        <Label fx:id="statusLabel" text="Ready" />
     </children>
+
     <padding>
         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
     </padding>
