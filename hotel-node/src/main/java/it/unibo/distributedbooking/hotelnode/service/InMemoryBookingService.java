@@ -6,6 +6,8 @@ import it.unibo.distributedbooking.common.model.BookingModificationRequest;
 import it.unibo.distributedbooking.common.model.BookingRequest;
 import it.unibo.distributedbooking.common.model.BookingResponse;
 import it.unibo.distributedbooking.common.model.BookingStatus;
+import it.unibo.distributedbooking.common.model.ReplicaBookingRequest;
+import it.unibo.distributedbooking.common.model.ReplicaBookingResponse;
 import it.unibo.distributedbooking.common.service.BookingService;
 import it.unibo.distributedbooking.hotelnode.repository.BookingRepository;
 import it.unibo.distributedbooking.hotelnode.repository.InMemoryBookingRepository;
@@ -179,6 +181,34 @@ public class InMemoryBookingService implements BookingService {
                 ));
         saveResponse(request.requestId(), response);
         return response;
+    }
+
+    public ReplicaBookingResponse replicateBooking(final ReplicaBookingRequest request) {
+        final Booking booking = request.booking();
+        if (booking == null) {
+            return new ReplicaBookingResponse(
+                    request.requestId(),
+                    false,
+                    "Replica booking payload is missing",
+                    null
+            );
+        }
+        final Booking existingBooking = bookingRepository.findById(booking.bookingId()).orElse(null);
+        if (existingBooking != null) {
+            return new ReplicaBookingResponse(
+                    request.requestId(),
+                    true,
+                    "Booking already replicated",
+                    existingBooking
+            );
+        }
+        bookingRepository.save(booking);
+        return new ReplicaBookingResponse(
+                request.requestId(),
+                true,
+                "Booking replicated successfully",
+                booking
+        );
     }
 
     private BookingResponse loadExistingResponse(final String requestId) {
