@@ -1,6 +1,12 @@
 package it.unibo.distributedbooking.coordinator.service;
 
-import it.unibo.distributedbooking.common.model.*;
+import it.unibo.distributedbooking.common.model.Booking;
+import it.unibo.distributedbooking.common.model.BookingCancellationRequest;
+import it.unibo.distributedbooking.common.model.BookingModificationRequest;
+import it.unibo.distributedbooking.common.model.BookingRequest;
+import it.unibo.distributedbooking.common.model.BookingResponse;
+import it.unibo.distributedbooking.common.model.ReplicaBookingRequest;
+import it.unibo.distributedbooking.common.model.ReplicaBookingResponse;
 import it.unibo.distributedbooking.coordinator.client.HotelNodeClient;
 import it.unibo.distributedbooking.coordinator.model.HotelNodeInfo;
 
@@ -9,7 +15,8 @@ public class BookingReplicaService {
     private final HotelNodeClient hotelNodeClient;
     private final ReplicationTargetSelector replicationTargetSelector;
 
-    public BookingReplicaService(final HotelNodeClient hotelNodeClient, final ReplicationTargetSelector replicationTargetSelector) {
+    public BookingReplicaService(final HotelNodeClient hotelNodeClient,
+                                 final ReplicationTargetSelector replicationTargetSelector) {
         this.hotelNodeClient = hotelNodeClient;
         this.replicationTargetSelector = replicationTargetSelector;
     }
@@ -22,21 +29,24 @@ public class BookingReplicaService {
                 .ifPresent(replicaTarget -> {
                     final String replicaBaseUrl = buildBaseUrl(replicaTarget);
                     if (!hotelNodeClient.isHealthy(replicaBaseUrl)) {
-                        System.out.println("Replica target " + replicaTarget.getHotelId() + " is not healthy. Skipping create replication.");
+                        System.out.println("Replica target " + replicaTarget.getHotelId()
+                                + " is not healthy. Skipping create replication.");
                         return;
                     }
                     final Booking replicaBooking = primaryResponse.booking();
-                    final BookingRequest replicaRequest = new BookingRequest(
+                    final ReplicaBookingRequest replicaRequest = new ReplicaBookingRequest(
                             request.requestId() + "-replica-" + replicaTarget.getHotelId(),
-                            replicaBooking.hotelId(),
-                            replicaBooking.roomId(),
-                            replicaBooking.customerId(),
-                            replicaBooking.checkInDate(),
-                            replicaBooking.checkOutDate()
+                            replicaBooking
                     );
                     System.out.println("Replicating create for booking " + replicaBooking.bookingId()
                             + " to " + replicaTarget.getHotelId() + " at " + replicaBaseUrl);
-                    hotelNodeClient.createBooking(replicaBaseUrl, replicaRequest);
+                    final ReplicaBookingResponse replicaResponse =
+                            hotelNodeClient.replicateBooking(replicaBaseUrl, replicaRequest);
+                    if (!replicaResponse.success()) {
+                        System.out.println("Create replication failed for booking "
+                                + replicaBooking.bookingId() + " to " + replicaTarget.getHotelId()
+                                + ": " + replicaResponse.message());
+                    }
                 });
     }
 
@@ -44,49 +54,16 @@ public class BookingReplicaService {
         if (bookingBeforeCancellation == null) {
             return;
         }
-        replicationTargetSelector.findReplicaTarget(bookingBeforeCancellation.hotelId())
-                .ifPresent(replicaTarget -> {
-                    final String replicaBaseUrl = buildBaseUrl(replicaTarget);
-                    if (!hotelNodeClient.isHealthy(replicaBaseUrl)) {
-                        System.out.println("Replica target " + replicaTarget.getHotelId() + " is not healthy. Skipping cancel replication.");
-                        return;
-                    }
-                    final BookingCancellationRequest replicaRequest = new BookingCancellationRequest(
-                            request.requestId() + "-replica-" + replicaTarget.getHotelId(),
-                            request.bookingId()
-                    );
-                    System.out.println("Replicating cancel for booking " + request.bookingId()
-                            + " to " + replicaTarget.getHotelId() + " at " + replicaBaseUrl);
-
-                    hotelNodeClient.cancelBooking(replicaBaseUrl, replicaRequest);
-                });
+        System.out.println("Cancel replication not implemented yet for booking "
+                + bookingBeforeCancellation.bookingId());
     }
 
     public void replicateModify(final BookingModificationRequest request, final BookingResponse primaryResponse) {
-        if (primaryResponse == null || !primaryResponse.success() || primaryResponse.booking() == null) {
+        if (primaryResponse == null || primaryResponse.booking() == null) {
             return;
         }
-        replicationTargetSelector.findReplicaTarget(primaryResponse.booking().hotelId())
-                .ifPresent(replicaTarget -> {
-                    final String replicaBaseUrl = buildBaseUrl(replicaTarget);
-                    if (!hotelNodeClient.isHealthy(replicaBaseUrl)) {
-                        System.out.println("Replica target " + replicaTarget.getHotelId() + " is not healthy. Skipping modify replication.");
-                        return;
-                    }
-                    final Booking updatedBooking = primaryResponse.booking();
-                    final BookingModificationRequest replicaRequest = new BookingModificationRequest(
-                            request.requestId() + "-replica-" + replicaTarget.getHotelId(),
-                            updatedBooking.bookingId(),
-                            updatedBooking.hotelId(),
-                            updatedBooking.roomId(),
-                            updatedBooking.customerId(),
-                            updatedBooking.checkInDate(),
-                            updatedBooking.checkOutDate()
-                    );
-                    System.out.println("Replicating modify for booking " + updatedBooking.bookingId()
-                            + " to " + replicaTarget.getHotelId() + " at " + replicaBaseUrl);
-                    hotelNodeClient.modifyBooking(replicaBaseUrl, replicaRequest);
-                });
+        System.out.println("Modify replication not implemented yet for booking "
+                + primaryResponse.booking().bookingId());
     }
 
     private String buildBaseUrl(final HotelNodeInfo hotelNodeInfo) {
