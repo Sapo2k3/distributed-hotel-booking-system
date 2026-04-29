@@ -14,11 +14,14 @@ public class BookingReplicaService {
 
     private final HotelNodeClient hotelNodeClient;
     private final ReplicationTargetSelector replicationTargetSelector;
+    private final BookingReplicationRegistryService bookingReplicationRegistryService;
 
     public BookingReplicaService(final HotelNodeClient hotelNodeClient,
-                                 final ReplicationTargetSelector replicationTargetSelector) {
+                                 final ReplicationTargetSelector replicationTargetSelector,
+                                 final BookingReplicationRegistryService bookingReplicationRegistryService) {
         this.hotelNodeClient = hotelNodeClient;
         this.replicationTargetSelector = replicationTargetSelector;
+        this.bookingReplicationRegistryService = bookingReplicationRegistryService;
     }
 
     public void replicateCreate(final BookingRequest request, final BookingResponse primaryResponse) {
@@ -42,7 +45,15 @@ public class BookingReplicaService {
                             + " to " + replicaTarget.getHotelId() + " at " + replicaBaseUrl);
                     final ReplicaBookingResponse replicaResponse =
                             hotelNodeClient.replicateBooking(replicaBaseUrl, replicaRequest);
-                    if (!replicaResponse.success()) {
+                    if (replicaResponse.success()) {
+                        bookingReplicationRegistryService.registerReplication(
+                                replicaBooking.bookingId(),
+                                request.hotelId(),
+                                replicaTarget.getHotelId()
+                        );
+                        System.out.println("Replication metadata registered for booking "
+                                + replicaBooking.bookingId());
+                    } else {
                         System.out.println("Create replication failed for booking "
                                 + replicaBooking.bookingId() + " to " + replicaTarget.getHotelId()
                                 + ": " + replicaResponse.message());
