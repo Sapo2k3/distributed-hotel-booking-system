@@ -318,4 +318,41 @@ class BookingCoordinatorServiceTest {
         verify(locatorService).updateBooking(modifiedBooking);
         verifyNoMoreInteractions(locatorService, hotelRegistryService, hotelNodeClient);
     }
+
+    @Test
+    void shouldReplicateBookingWhenCreateIsSuccessful() {
+        BookingRequest request = new BookingRequest(
+                "req-1",
+                "hotel-1",
+                "room-101",
+                "customer-1",
+                LocalDate.of(2026, 4, 10),
+                LocalDate.of(2026, 4, 12)
+        );
+        HotelNodeInfo primaryNode = new HotelNodeInfo("hotel-1", "localhost", 8081);
+        HotelNodeInfo replicaNode = new HotelNodeInfo("hotel-2", "localhost", 8082);
+        Booking createdBooking = new Booking(
+                "booking-1",
+                "hotel-1",
+                "room-101",
+                "customer-1",
+                LocalDate.of(2026, 4, 10),
+                LocalDate.of(2026, 4, 12),
+                BookingStatus.CONFIRMED
+        );
+        BookingResponse primaryResponse = new BookingResponse("req-1", true, "Success", createdBooking);
+        when(hotelRegistryService.findHotelById("hotel-1")).thenReturn(Optional.of(primaryNode));
+        when(hotelNodeClient.isHealthy("http://localhost:8081")).thenReturn(true);
+        when(hotelNodeClient.createBooking("http://localhost:8081", request)).thenReturn(primaryResponse);
+        when(hotelRegistryService.findAllHotels()).thenReturn(java.util.List.of(primaryNode, replicaNode));
+        when(hotelNodeClient.isHealthy("http://localhost:8082")).thenReturn(true);
+        BookingResponse response = coordinatorService.coordinateBooking(request);
+        assertThat(response.success()).isTrue();
+        verify(hotelNodeClient).createBooking("http://localhost:8081", request);
+        verify(hotelNodeClient).replicateBooking(
+                org.mockito.ArgumentMatchers.eq("http://localhost:8082"),
+                org.mockito.ArgumentMatchers.argThat(r -> r.booking().bookingId().equals("booking-1"))
+        );
+        verify(locatorService).updateBooking(createdBooking);
+    }
 }
