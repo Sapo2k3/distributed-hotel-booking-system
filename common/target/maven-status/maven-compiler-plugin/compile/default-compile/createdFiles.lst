@@ -1,5 +1,6 @@
 it/unibo/distributedbooking/common/model/Booking.class
 it/unibo/distributedbooking/common/model/HealthResponse.class
+it/unibo/distributedbooking/common/model/ReplicaBookingRequest.class
 it/unibo/distributedbooking/common/model/Room.class
 it/unibo/distributedbooking/common/model/BookingModificationRequest.class
 it/unibo/distributedbooking/common/model/BookingResponse.class
@@ -8,3 +9,4 @@ it/unibo/distributedbooking/common/model/BookingStatus.class
 it/unibo/distributedbooking/common/model/BookingRequest.class
 it/unibo/distributedbooking/common/service/BookingService.class
 it/unibo/distributedbooking/common/model/Hotel.class
+it/unibo/distributedbooking/common/model/ReplicaBookingResponse.class

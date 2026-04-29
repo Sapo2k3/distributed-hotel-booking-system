@@ -6,5 +6,7 @@
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/common/src/main/java/it/unibo/distributedbooking/common/model/BookingStatus.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/common/src/main/java/it/unibo/distributedbooking/common/model/HealthResponse.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/common/src/main/java/it/unibo/distributedbooking/common/model/Hotel.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/common/src/main/java/it/unibo/distributedbooking/common/model/ReplicaBookingRequest.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/common/src/main/java/it/unibo/distributedbooking/common/model/ReplicaBookingResponse.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/common/src/main/java/it/unibo/distributedbooking/common/model/Room.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/common/src/main/java/it/unibo/distributedbooking/common/service/BookingService.java

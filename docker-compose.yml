@@ -9,12 +9,15 @@ services:
       HOTEL_NODE_PORT: 8081
     ports:
       - "8081:8081"
+    volumes:
+      - hotel-node-1-data:/app/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
       interval: 10s
       timeout: 3s
       retries: 5
       start_period: 10s
+    restart: unless-stopped
     networks:
       - distributed-booking
 
@@ -28,12 +31,15 @@ services:
       HOTEL_NODE_PORT: 8082
     ports:
       - "8082:8082"
+    volumes:
+      - hotel-node-2-data:/app/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
       interval: 10s
       timeout: 3s
       retries: 5
       start_period: 10s
+    restart: unless-stopped
     networks:
       - distributed-booking
 
@@ -57,9 +63,20 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/hotels"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
     networks:
       - distributed-booking
 
 networks:
   distributed-booking:
     driver: bridge
+
+volumes:
+  hotel-node-1-data:
+  hotel-node-2-data:

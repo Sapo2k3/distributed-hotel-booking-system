@@ -10,6 +10,11 @@
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/model/HotelNodeInfo.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/BookingCoordinatorService.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/BookingLocatorService.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/BookingReplicaService.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/BookingReplicationRegistryService.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/HotelRegistryService.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/InMemoryBookingLocatorService.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/InMemoryBookingReplicationRegistryService.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/InMemoryHotelRegistryService.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/InMemoryReplicationTargetSelector.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/coordinator/src/main/java/it/unibo/distributedbooking/coordinator/service/ReplicationTargetSelector.java

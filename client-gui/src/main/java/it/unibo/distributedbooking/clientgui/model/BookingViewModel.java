@@ -8,6 +8,7 @@ public class BookingViewModel {
     private final String customerId;
     private final String checkInDate;
     private final String checkOutDate;
+    private final String stay;
     private final String status;
 
     public BookingViewModel(final String bookingId,
@@ -23,6 +24,7 @@ public class BookingViewModel {
         this.customerId = customerId;
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
+        this.stay = buildStay(checkInDate, checkOutDate);
         this.status = status;
     }
 
@@ -50,7 +52,28 @@ public class BookingViewModel {
         return checkOutDate;
     }
 
+    public String getStay() {
+        return stay;
+    }
+
     public String getStatus() {
         return status;
+    }
+
+    private String buildStay(final String checkInDate, final String checkOutDate) {
+        final String from = checkInDate == null ? "" : checkInDate;
+        final String to = checkOutDate == null ? "" : checkOutDate;
+
+        if (from.isBlank() && to.isBlank()) {
+            return "";
+        }
+        if (from.isBlank()) {
+            return to;
+        }
+        if (to.isBlank()) {
+            return from;
+        }
+
+        return from + " -> " + to;
     }
 }

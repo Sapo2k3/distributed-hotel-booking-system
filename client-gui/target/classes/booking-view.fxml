@@ -121,9 +121,8 @@
                         <TableColumn fx:id="hotelIdBookingCol" minWidth="90.0" prefWidth="100.0" text="Hotel" />
                         <TableColumn fx:id="roomIdBookingCol" minWidth="80.0" prefWidth="90.0" text="Room" />
                         <TableColumn fx:id="customerIdBookingCol" minWidth="120.0" prefWidth="140.0" text="Customer" />
-                        <TableColumn fx:id="checkInBookingCol" minWidth="100.0" prefWidth="110.0" text="Check-in" />
-                        <TableColumn fx:id="checkOutBookingCol" minWidth="100.0" prefWidth="110.0" text="Check-out" />
-                        <TableColumn fx:id="statusBookingCol" minWidth="100.0" prefWidth="120.0" text="Status" />
+                        <TableColumn fx:id="stayBookingCol" minWidth="180.0" prefWidth="220.0" text="Stay" />
+                        <TableColumn fx:id="statusBookingCol" minWidth="110.0" prefWidth="130.0" text="Status" />
                     </columns>
                 </TableView>
             </content>

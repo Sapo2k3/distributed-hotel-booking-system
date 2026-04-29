@@ -32,6 +32,16 @@ public class BookingCoordinatorService {
 
     public BookingCoordinatorService(final HotelRegistryService hotelRegistryService,
                                      final HotelNodeClient hotelNodeClient,
+                                     final BookingLocatorService bookingLocatorService,
+                                     final BookingReplicaService bookingReplicaService) {
+        this.hotelRegistryService = hotelRegistryService;
+        this.hotelNodeClient = hotelNodeClient;
+        this.bookingLocatorService = bookingLocatorService;
+        this.bookingReplicaService = bookingReplicaService;
+    }
+
+    public BookingCoordinatorService(final HotelRegistryService hotelRegistryService,
+                                     final HotelNodeClient hotelNodeClient,
                                      final BookingLocatorService bookingLocatorService) {
         this.hotelRegistryService = hotelRegistryService;
         this.hotelNodeClient = hotelNodeClient;

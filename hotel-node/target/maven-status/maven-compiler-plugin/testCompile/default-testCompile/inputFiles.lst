@@ -1,4 +1,6 @@
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/test/java/it/unibo/distributedbooking/hotelnode/api/ReplicaBookingHttpHandlerIntegrationTest.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/test/java/it/unibo/distributedbooking/hotelnode/repository/H2BookingRepositoryTest.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/test/java/it/unibo/distributedbooking/hotelnode/repository/H2ProcessedRequestRepositoryTest.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/test/java/it/unibo/distributedbooking/hotelnode/service/InMemoryBookingServiceIdempotencyTest.java
+/Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/test/java/it/unibo/distributedbooking/hotelnode/service/InMemoryBookingServiceReplicationTest.java
 /Users/mattia/Desktop/Università/Magistrale/DistributedSystem/distributed-hotel-booking-system/hotel-node/src/test/java/it/unibo/distributedbooking/hotelnode/service/InMemoryBookingServiceTest.java
