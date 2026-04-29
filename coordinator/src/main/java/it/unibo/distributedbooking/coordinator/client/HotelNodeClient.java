@@ -1,9 +1,6 @@
 package it.unibo.distributedbooking.coordinator.client;
 
-import it.unibo.distributedbooking.common.model.BookingCancellationRequest;
-import it.unibo.distributedbooking.common.model.BookingModificationRequest;
-import it.unibo.distributedbooking.common.model.BookingRequest;
-import it.unibo.distributedbooking.common.model.BookingResponse;
+import it.unibo.distributedbooking.common.model.*;
 
 public interface HotelNodeClient {
 
@@ -12,6 +9,8 @@ public interface HotelNodeClient {
     BookingResponse cancelBooking(final String baseUrl, final BookingCancellationRequest request);
 
     BookingResponse modifyBooking(final String baseUrl, final BookingModificationRequest request);
+
+    ReplicaBookingResponse replicateBooking(final String baseUrl, final ReplicaBookingRequest request);
 
     boolean isHealthy(final String baseUrl);
 }

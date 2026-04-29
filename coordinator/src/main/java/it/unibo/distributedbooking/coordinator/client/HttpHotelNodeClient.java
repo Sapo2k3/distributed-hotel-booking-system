@@ -1,15 +1,17 @@
 package it.unibo.distributedbooking.coordinator.client;
 
-import it.unibo.distributedbooking.hotelnode.util.JsonUtil;
 import it.unibo.distributedbooking.common.model.BookingCancellationRequest;
 import it.unibo.distributedbooking.common.model.BookingModificationRequest;
 import it.unibo.distributedbooking.common.model.BookingRequest;
 import it.unibo.distributedbooking.common.model.BookingResponse;
+import it.unibo.distributedbooking.common.model.ReplicaBookingRequest;
+import it.unibo.distributedbooking.common.model.ReplicaBookingResponse;
+import it.unibo.distributedbooking.hotelnode.util.JsonUtil;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.URI;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
@@ -30,14 +32,18 @@ public class HttpHotelNodeClient implements HotelNodeClient {
         this.httpClient = httpClient;
     }
 
-    private BookingResponse executePost(final String url,  final Object requestBody, final String requestId){
+    private BookingResponse executeBookingPost(final String url,
+                                               final Object requestBody, final String requestId) {
         try {
-            String jsonRequest = JsonUtil.toJson(requestBody);
-            HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url))
+            final String jsonRequest = JsonUtil.toJson(requestBody);
+            final HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(REQUEST_TIMEOUT)
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(jsonRequest))
                     .build();
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            final HttpResponse<String> response =
+                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
                 return JsonUtil.fromJson(response.body(), BookingResponse.class);
             }
@@ -65,9 +71,47 @@ public class HttpHotelNodeClient implements HotelNodeClient {
         }
     }
 
+    private ReplicaBookingResponse executeReplicaPost(final String url, final ReplicaBookingRequest requestBody) {
+        try {
+            final String jsonRequest = JsonUtil.toJson(requestBody);
+            final HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(REQUEST_TIMEOUT)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonRequest))
+                    .build();
+            final HttpResponse<String> response =
+                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                return JsonUtil.fromJson(response.body(), ReplicaBookingResponse.class);
+            }
+            return new ReplicaBookingResponse(
+                    requestBody.requestId(),
+                    false,
+                    "HTTP " + response.statusCode() + ": " + response.body(),
+                    null
+            );
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return new ReplicaBookingResponse(
+                    requestBody.requestId(),
+                    false,
+                    "Client interrupted: " + e.getMessage(),
+                    null
+            );
+        } catch (IOException e) {
+            return new ReplicaBookingResponse(
+                    requestBody.requestId(),
+                    false,
+                    "Client error: " + e.getMessage(),
+                    null
+            );
+        }
+    }
+
     @Override
-    public BookingResponse createBooking(String baseUrl, BookingRequest request) {
-        return executePost(
+    public BookingResponse createBooking(final String baseUrl, final BookingRequest request) {
+        return executeBookingPost(
                 baseUrl + "/bookings",
                 request,
                 request.requestId()
@@ -75,8 +119,8 @@ public class HttpHotelNodeClient implements HotelNodeClient {
     }
 
     @Override
-    public BookingResponse cancelBooking(String baseUrl, BookingCancellationRequest request) {
-        return executePost(
+    public BookingResponse cancelBooking(final String baseUrl, final BookingCancellationRequest request) {
+        return executeBookingPost(
                 baseUrl + "/bookings/cancel",
                 request,
                 request.requestId()
@@ -84,8 +128,8 @@ public class HttpHotelNodeClient implements HotelNodeClient {
     }
 
     @Override
-    public BookingResponse modifyBooking(String baseUrl, BookingModificationRequest request) {
-        return executePost(
+    public BookingResponse modifyBooking(final String baseUrl, final BookingModificationRequest request) {
+        return executeBookingPost(
                 baseUrl + "/bookings/modify",
                 request,
                 request.requestId()
@@ -93,20 +137,28 @@ public class HttpHotelNodeClient implements HotelNodeClient {
     }
 
     @Override
+    public ReplicaBookingResponse replicateBooking(final String baseUrl, final ReplicaBookingRequest request) {
+        return executeReplicaPost(
+                baseUrl + "/internal/bookings/replicate",
+                request
+        );
+    }
+
+    @Override
     public boolean isHealthy(final String baseUrl) {
-        String healthUrl = baseUrl + "/health";
+        final String healthUrl = baseUrl + "/health";
 
         try {
-            HttpRequest request = HttpRequest.newBuilder()
+            final HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(healthUrl))
                     .timeout(REQUEST_TIMEOUT)
                     .GET()
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            final HttpResponse<String> response =
+                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             System.out.println("Health check " + healthUrl + " -> " + response.statusCode());
-
             return response.statusCode() == 200;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

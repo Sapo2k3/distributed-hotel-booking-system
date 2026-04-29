@@ -4,7 +4,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import it.unibo.distributedbooking.common.model.ReplicaBookingRequest;
 import it.unibo.distributedbooking.common.model.ReplicaBookingResponse;
-import it.unibo.distributedbooking.hotelnode.repository.InMemoryBookingRepository;
 import it.unibo.distributedbooking.hotelnode.service.InMemoryBookingService;
 import it.unibo.distributedbooking.hotelnode.util.JsonUtil;
 
