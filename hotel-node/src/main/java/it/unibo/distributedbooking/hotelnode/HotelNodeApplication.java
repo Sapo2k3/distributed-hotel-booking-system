@@ -1,11 +1,11 @@
 package it.unibo.distributedbooking.hotelnode;
 
 import com.sun.net.httpserver.HttpServer;
-import it.unibo.distributedbooking.common.service.BookingService;
 import it.unibo.distributedbooking.hotelnode.api.BookingHttpHandler;
 import it.unibo.distributedbooking.hotelnode.api.CancelHttpHandler;
 import it.unibo.distributedbooking.hotelnode.api.HealthHttpHandler;
 import it.unibo.distributedbooking.hotelnode.api.ModifyHttpHandler;
+import it.unibo.distributedbooking.hotelnode.api.ReplicaBookingHttpHandler;
 import it.unibo.distributedbooking.hotelnode.repository.BookingRepository;
 import it.unibo.distributedbooking.hotelnode.repository.H2BookingRepository;
 import it.unibo.distributedbooking.hotelnode.repository.H2ProcessedRequestRepository;
@@ -28,26 +28,31 @@ public class HotelNodeApplication {
     public static void main(final String[] args) {
         final int port = resolvePort();
         final String hotelId = resolveHotelId();
+
         try {
             final String jdbcUrl = buildJdbcUrl(hotelId);
             final BookingRepository bookingRepository = new H2BookingRepository(jdbcUrl);
             final ProcessedRequestRepository processedRequestRepository =
                     new H2ProcessedRequestRepository(jdbcUrl);
-            final BookingService service =
+            final InMemoryBookingService service =
                     new InMemoryBookingService(bookingRepository, processedRequestRepository);
+
             final HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
             server.createContext("/bookings", new BookingHttpHandler(service));
             server.createContext("/bookings/cancel", new CancelHttpHandler(service));
             server.createContext("/bookings/modify", new ModifyHttpHandler(service));
+            server.createContext("/internal/bookings/replicate", new ReplicaBookingHttpHandler(service));
             server.createContext("/health", new HealthHttpHandler(hotelId));
             server.setExecutor(Executors.newFixedThreadPool(10));
             server.start();
+
             System.out.println("Hotel node '" + hotelId + "' listening on port " + port);
             System.out.println("Database: " + jdbcUrl);
             System.out.println("Endpoints:");
             System.out.println("  POST /bookings");
             System.out.println("  POST /bookings/cancel");
             System.out.println("  POST /bookings/modify");
+            System.out.println("  POST /internal/bookings/replicate");
             System.out.println("  GET  /health");
 
         } catch (SQLException | IOException e) {
