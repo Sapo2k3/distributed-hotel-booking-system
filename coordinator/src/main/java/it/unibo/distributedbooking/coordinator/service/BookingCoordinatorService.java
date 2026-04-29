@@ -25,7 +25,8 @@ public class BookingCoordinatorService {
         this.bookingLocatorService = new InMemoryBookingLocatorService();
         this.bookingReplicaService = new BookingReplicaService(
                 this.hotelNodeClient,
-                new InMemoryReplicationTargetSelector(hotelRegistryService)
+                new InMemoryReplicationTargetSelector(hotelRegistryService),
+                new InMemoryBookingReplicationRegistryService()
         );
     }
 
@@ -37,12 +38,13 @@ public class BookingCoordinatorService {
         this.bookingLocatorService = bookingLocatorService;
         this.bookingReplicaService = new BookingReplicaService(
                 hotelNodeClient,
-                new InMemoryReplicationTargetSelector(hotelRegistryService)
+                new InMemoryReplicationTargetSelector(hotelRegistryService),
+                new InMemoryBookingReplicationRegistryService()
         );
     }
 
     public BookingResponse coordinateBooking(final BookingRequest request) {
-        Optional<HotelNodeInfo> hotelNode = hotelRegistryService.findHotelById(request.hotelId());
+        final Optional<HotelNodeInfo> hotelNode = hotelRegistryService.findHotelById(request.hotelId());
         if (hotelNode.isEmpty()) {
             return new BookingResponse(
                     request.requestId(),
@@ -51,7 +53,7 @@ public class BookingCoordinatorService {
                     null
             );
         }
-        String baseUrl = "http://" + hotelNode.get().getHost() + ":" + hotelNode.get().getPort();
+        final String baseUrl = "http://" + hotelNode.get().getHost() + ":" + hotelNode.get().getPort();
         if (!hotelNodeClient.isHealthy(baseUrl)) {
             return new BookingResponse(
                     request.requestId(),
@@ -61,7 +63,7 @@ public class BookingCoordinatorService {
             );
         }
         System.out.println("Routing booking to " + hotelNode.get().getHotelId() + " at " + baseUrl);
-        BookingResponse response = hotelNodeClient.createBooking(baseUrl, request);
+        final BookingResponse response = hotelNodeClient.createBooking(baseUrl, request);
         if (response.success() && response.booking() != null) {
             bookingLocatorService.updateBooking(response.booking());
             bookingReplicaService.replicateCreate(request, response);
@@ -70,7 +72,7 @@ public class BookingCoordinatorService {
     }
 
     public BookingResponse coordinateCancellation(final BookingCancellationRequest request) {
-        Optional<Booking> booking = bookingLocatorService.findByBookingId(request.bookingId());
+        final Optional<Booking> booking = bookingLocatorService.findByBookingId(request.bookingId());
         if (booking.isEmpty()) {
             return new BookingResponse(
                     request.requestId(),
@@ -88,7 +90,8 @@ public class BookingCoordinatorService {
             );
         }
         final Booking bookingBeforeCancellation = booking.get();
-        Optional<HotelNodeInfo> hotelNode = hotelRegistryService.findHotelById(bookingBeforeCancellation.hotelId());
+        final Optional<HotelNodeInfo> hotelNode =
+                hotelRegistryService.findHotelById(bookingBeforeCancellation.hotelId());
         if (hotelNode.isEmpty()) {
             return new BookingResponse(
                     request.requestId(),
@@ -97,7 +100,7 @@ public class BookingCoordinatorService {
                     null
             );
         }
-        String baseUrl = "http://" + hotelNode.get().getHost() + ":" + hotelNode.get().getPort();
+        final String baseUrl = "http://" + hotelNode.get().getHost() + ":" + hotelNode.get().getPort();
         if (!hotelNodeClient.isHealthy(baseUrl)) {
             return new BookingResponse(
                     request.requestId(),
@@ -107,11 +110,12 @@ public class BookingCoordinatorService {
             );
         }
         System.out.println("Routing cancellation to " + hotelNode.get().getHotelId() + " at " + baseUrl);
-        BookingResponse response = hotelNodeClient.cancelBooking(baseUrl, request);
+        final BookingResponse response = hotelNodeClient.cancelBooking(baseUrl, request);
         if (response.success()) {
             bookingLocatorService.markCancelled(request.bookingId());
             bookingReplicaService.replicateCancel(request, bookingBeforeCancellation);
-            Booking cancelledBooking = bookingLocatorService.findByBookingId(request.bookingId()).orElse(null);
+            final Booking cancelledBooking =
+                    bookingLocatorService.findByBookingId(request.bookingId()).orElse(null);
             return new BookingResponse(
                     response.requestId(),
                     true,
@@ -123,7 +127,7 @@ public class BookingCoordinatorService {
     }
 
     public BookingResponse coordinateModification(final BookingModificationRequest request) {
-        Optional<Booking> booking = bookingLocatorService.findByBookingId(request.bookingId());
+        final Optional<Booking> booking = bookingLocatorService.findByBookingId(request.bookingId());
         if (booking.isEmpty()) {
             return new BookingResponse(
                     request.requestId(),
@@ -140,7 +144,8 @@ public class BookingCoordinatorService {
                     booking.get()
             );
         }
-        Optional<HotelNodeInfo> hotelNode = hotelRegistryService.findHotelById(booking.get().hotelId());
+        final Optional<HotelNodeInfo> hotelNode =
+                hotelRegistryService.findHotelById(booking.get().hotelId());
         if (hotelNode.isEmpty()) {
             return new BookingResponse(
                     request.requestId(),
@@ -149,7 +154,7 @@ public class BookingCoordinatorService {
                     null
             );
         }
-        String baseUrl = "http://" + hotelNode.get().getHost() + ":" + hotelNode.get().getPort();
+        final String baseUrl = "http://" + hotelNode.get().getHost() + ":" + hotelNode.get().getPort();
         if (!hotelNodeClient.isHealthy(baseUrl)) {
             return new BookingResponse(
                     request.requestId(),
@@ -159,7 +164,7 @@ public class BookingCoordinatorService {
             );
         }
         System.out.println("Routing modification to " + hotelNode.get().getHotelId() + " at " + baseUrl);
-        BookingResponse response = hotelNodeClient.modifyBooking(baseUrl, request);
+        final BookingResponse response = hotelNodeClient.modifyBooking(baseUrl, request);
         if (response.success() && response.booking() != null) {
             bookingLocatorService.updateBooking(response.booking());
             bookingReplicaService.replicateModify(request, response);
